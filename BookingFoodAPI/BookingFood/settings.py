@@ -11,28 +11,17 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-
-import cloudinary
-import cloudinary.uploader
 import cloudinary.api
 
 # Khai báo đường dẫn cơ bản cho dự án
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = 'django-insecure-4)ozmfl+q_-**f6-4l5l@oyft69#)-c+d%ua$dc3tftv-%e+0c'
 # *** Cài đặt bảo mật ***
 SECRET_KEY = 'django-insecure--6c-x-h^@!a1%0_pgn%7)^l!&ccv0&j(1wtemgco&51_m2m(!g'  # Khóa bí mật, cần bảo mật trong môi trường thực tế
 DEBUG = True  # Chỉ nên bật `True` trong môi trường phát triển
 ALLOWED_HOSTS = []  # Danh sách các tên miền hoặc địa chỉ IP được phép truy cập
 
-
-# Application definition
-
+# *** Khai báo các ứng dụng Django ***
 INSTALLED_APPS = [
     'django.contrib.admin',  # Quản lý Admin
     'django.contrib.auth',  # Xác thực người dùng
@@ -52,8 +41,8 @@ INSTALLED_APPS = [
     'cloudinary',  # Tích hợp Cloudinary để xử lý tệp
 ]
 
+# *** Cấu hình Middleware ***
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # Hỗ trợ CORS
     'django.middleware.security.SecurityMiddleware',  # Bảo mật chung
     'django.contrib.sessions.middleware.SessionMiddleware',  # Quản lý phiên làm việc
     'django.middleware.common.CommonMiddleware',  # Xử lý các yêu cầu chung
@@ -61,7 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',  # Xác thực người dùng
     'django.contrib.messages.middleware.MessageMiddleware',  # Quản lý tin nhắn
     'django.middleware.clickjacking.XFrameOptionsMiddleware',  # Ngăn chặn clickjacking
-    "django.middleware.common.CommonMiddleware",
+    'corsheaders.middleware.CorsMiddleware',  # Hỗ trợ CORS
 ]
 
 # Cho phép CORS từ tất cả các nguồn
@@ -89,23 +78,16 @@ TEMPLATES = [
 # Cấu hình ứng dụng WSGI
 WSGI_APPLICATION = 'BookingFood.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
+# *** Cấu hình Database ***
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'bookingfooddb',
-        'USER': 'root',
-        'PASSWORD': 'Quang0913906329',
-        'HOST': ''
-    },
+        'ENGINE': 'django.db.backends.mysql',  # Sử dụng MySQL làm cơ sở dữ liệu
+        'NAME': 'bookingfood_db',  # Tên cơ sở dữ liệu
+        'USER': 'root',  # Tên đăng nhập
+        'PASSWORD': '12345678@',  # Mật khẩu
+        'HOST': '',  # Mặc định là localhost
+    }
 }
-AUTH_USER_MODEL = 'BookingFoodApp.User'
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 # *** Cấu hình xác thực mật khẩu ***
 AUTH_PASSWORD_VALIDATORS = [
@@ -115,17 +97,14 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
 # *** Cài đặt ngôn ngữ và múi giờ ***
 LANGUAGE_CODE = 'en-us'  # Ngôn ngữ mặc định
 TIME_ZONE = 'Asia/Ho_Chi_Minh'  # Múi giờ Việt Nam
 USE_I18N = True  # Hỗ trợ quốc tế hóa
 USE_TZ = True  # Sử dụng múi giờ
 
-
 # *** Cấu hình tệp tĩnh và tệp media ***
 STATIC_URL = 'static/'  # Đường dẫn tệp tĩnh
-MEDIA_URL = '/media/'  # Đường dẫn tải lên tệp media
 MEDIA_ROOT = '%s/BookingFoodApp/static/' % BASE_DIR  # Thư mục lưu trữ tệp media
 CKEDITOR_UPLOAD_PATH = "ckeditors/BookingFoodApp/"  # Thư mục tải lên CKEditor
 ACCOUNT_UNIQUE_EMAIL = True
@@ -133,13 +112,18 @@ ACCOUNT_UNIQUE_EMAIL = True
 # *** Cài đặt mặc định ***
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Cấu hình OAuth2
+OAUTH2_PROVIDER = {'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore'}
+
+# *** Tích hợp Cloudinary ***
 cloudinary.config(
-  cloud_name='bookingfoodcloud',
-  api_key="326241581439736",
-  api_secret="QdYStlnjFI3BfXCdvM53Llk-GNo",  # Khóa API bí mật
+    cloud_name="dwwfgtxv4",
+    api_key="847843234855491",
+    api_secret="OEbZdz4wwMCsG_CEfXW6ScQFliI",  # Khóa API bí mật
     secure=True
 )
 
+# *** Cấu hình REST Framework ***
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
@@ -153,11 +137,10 @@ REST_FRAMEWORK = {
 
 # *** Cấu hình Email ***
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = '2251012120quang@ou.edu.vn'  # Tài khoản email
-EMAIL_HOST_PASSWORD = 'QuangGR09093562364450'  # Mật khẩu ứng dụng email
+EMAIL_HOST_USER = 'trunghauu71@gmail.com'  # Tài khoản email
+EMAIL_HOST_PASSWORD = 'gnqm ddzq yzhw menp'  # Mật khẩu ứng dụng email
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # *** Cấu hình VNPay ***
@@ -178,13 +161,12 @@ FIREBASE_CONFIG = {
     'measurementId': "G-GTRY55R75P"
 }
 
+
 # Chỉ định model User tùy chỉnh
 AUTH_USER_MODEL = 'BookingFoodApp.User'
 
 # Cho phép thêm dấu `/` vào cuối URL
 APPEND_SLASH = True
 
-
-CLIENT_ID = '2hl4CO8TReqcWI3rkt7VUktabM6hOycqnJWlv8DN'
-CLIENT_SECRET = 'cdGfaVMANkjht4MMJi7uJ7zKBUOPBFeXp2Tc805BcNuol7G6yXKyXUDRZL9pB8PdCNR96hwAjyDvMYdTTOyHDQgpTZPbkbm9Bk7NO6KBkZqruoYPZ38sxlYSeecGpba4'
-
+CLIENT_ID = 'pimRKTmqbLgT6ssbf5CbYP0eE4Jp6tr0xA46ZjT6'
+CLIENT_SECRET = 'kOjY8zo3p28EqGeEhncezduYlRR9pxN61N0ct5s8uvDIDXvWiExmCQ27m2CFqNuWtR72XSEnEZL5OQqixzr7lwxBiZExUNrXKgkDdQ0bAwnM3pyCJcOwTKvlk2hYd3KU'

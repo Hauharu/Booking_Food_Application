@@ -1,7 +1,7 @@
 from _ast import Store
 
 from django.db import models
-from django.contrib.auth.models import AbstractUser, User
+from django.contrib.auth.models import AbstractUser
 from ckeditor.fields import RichTextField
 from cloudinary.models import CloudinaryField
 from django import forms
@@ -54,7 +54,7 @@ class Address(models.Model):
 class Store(models.Model):
     name = models.CharField(max_length=255, null=False, unique=True)
     description = RichTextField(null=True, blank=True)
-    avatar = CloudinaryField('avatar', default='', null=True, blank=True)
+    image = CloudinaryField('image', default='', null=True, blank=True)
     address_line = models.CharField(max_length=255, default='Ho Chi Minh City')
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
@@ -105,7 +105,7 @@ class Food(BaseModel):
     image = CloudinaryField('image', default='', null=True)
     store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='food', blank=False)
     menu = models.ForeignKey(Menu, on_delete=models.PROTECT, related_name='food', null=True,blank=True)
-    categories = models.ManyToManyField('Category', related_name='food', null=True,blank=True)
+    categories = models.ManyToManyField('Category', related_name='food',blank=True)
 
 
 
@@ -227,8 +227,8 @@ class PaymentVNPay(models.Model):
     vnp_TransactionNo = models.CharField(max_length=200, null=True, blank=True)
     vnp_ResponseCode = models.CharField(max_length=200, null=True, blank=True)
     customer = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    food = models.ManyToManyField(Food, through='PaymentVNPayDetail', related_name='hoadon_vnpay', null=True)
-    menu = models.ManyToManyField(Menu, through='PaymentVNPayDetail', related_name='hoadon_vnpay_menu', null=True)
+    food = models.ManyToManyField(Food, through='PaymentVNPayDetail', related_name='hoadon_vnpay')
+    menu = models.ManyToManyField(Menu, through='PaymentVNPayDetail', related_name='hoadon_vnpay_menu')
     cartItemIds = models.CharField(max_length=200, null=True, blank=True)
     payment_date = models.DateTimeField(null=True, blank=True)
 

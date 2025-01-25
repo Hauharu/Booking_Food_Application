@@ -1,0 +1,164 @@
+{% extends 'admin/base_site.html' %}
+{% block content %}
+<head>
+    <title>Thống kê doanh thu HiThuFood</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=2">
+    <!--  Boostrap 3 cdn  -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <!-- thu vien Chart.js-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .nav-pills > li > a {
+            font-size: 18px;
+            padding: 15px 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <ul class="nav nav-pills">
+        <li class="active"><a data-toggle="pill" href="#home">Doanh thu mỗi tháng</a></li>
+        <li><a data-toggle="pill" href="#menu1">Doanh thu mỗi quý</a></li>
+        <li><a data-toggle="pill" href="#menu2">Doanh thu mỗi năm</a></li>
+    </ul>
+
+    <div class="container">
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <div class="tab-content">
+        <div id="home" class="tab-pane fade in active">
+            <h1>Thống kê doanh thu năm {{ current_year }}</h1>
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>Doanh thu hàng tháng ({{ current_year }})</h3>
+                    <canvas id="monthlyRevenueChart" width="600" height="400"></canvas>
+                </div>
+            </div>
+            <script>
+                // Data for Monthly Revenue Chart
+                var monthlyCtx = document.getElementById('monthlyRevenueChart').getContext('2d');
+    var monthlyLabels = {{ monthly_labels|safe }};
+    var monthlyData = {{ monthly_data|safe }};
+
+    var monthlyChart = new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: monthlyLabels,
+            datasets: [{
+                label: 'Doanh thu hàng tháng',
+                data: monthlyData,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return value.toLocaleString('vi-VN', {style: 'currency', currency: 'VND'});
+                        }
+                    }
+                }
+            }
+        }
+    });
+            </script>
+        </div>
+
+        <div id="menu1" class="tab-pane fade">
+            <h1>Thống kê doanh thu năm {{ current_year }}</h1>
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>Doanh thu hàng quý ({{ current_year }})</h3>
+                    <canvas id="quarterlyRevenueChart" width="600" height="400"></canvas>
+                </div>
+            </div>
+            <script>
+                // Data for Quarterly Revenue Chart
+    var quarterlyCtx = document.getElementById('quarterlyRevenueChart').getContext('2d');
+    var quarterlyLabels = {{ quarterly_labels|safe }};
+    var quarterlyData = {{ quarterly_data|safe }};
+
+    var quarterlyChart = new Chart(quarterlyCtx, {
+        type: 'line',
+        data: {
+            labels: quarterlyLabels,
+            datasets: [{
+                label: 'Doanh thu hàng quý',
+                data: quarterlyData,
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 2,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return value.toLocaleString('vi-VN', {style: 'currency', currency: 'VND'});
+                        }
+                    }
+                }
+            }
+        }
+    });
+            </script>
+        </div>
+
+        <div id="menu2" class="tab-pane fade">
+            <h1>Doanh thu hàng năm từ khi Store được tạo</h1>
+            <div class="row">
+                <div class="col-md-4">
+                    <h3>Doanh thu hàng năm</h3>
+                    <canvas id="yearlyRevenueChart" width="1000" height="800"></canvas>
+                </div>
+            </div>
+            <script>
+                // Data for Yearly Revenue Chart
+    var yearlyCtx = document.getElementById('yearlyRevenueChart').getContext('2d');
+    var yearlyLabels = {{ yearly_labels|safe }};
+    var yearlyData = {{ yearly_data|safe }};
+
+    var yearlyChart = new Chart(yearlyCtx, {
+        type: 'line',
+        data: {
+            labels: yearlyLabels,
+            datasets: [{
+                label: 'Doanh thu hàng năm',
+                data: yearlyData,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 2,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return value.toLocaleString('vi-VN', {style: 'currency', currency: 'VND'});
+                        }
+                    }
+                }
+            }
+        }
+    });
+            </script>
+        </div>
+    </div>
+</body>
+
+{% endblock %}
