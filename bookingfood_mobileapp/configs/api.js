@@ -22,10 +22,10 @@ const apiEndpoints = {
 
   //Đồ ăn
   "food": "/Food/", // Thêm đường dẫn cho "food , lấy danh sách toàn bộ đồ ăn trong database // 'GET'
-  "food-details": (id) => `/Food/${id}`, //Thông tin chi tiết đồ ăn + Cập nhật chi tiết + Xóa đồ ăn // 'GET + PATCH + DELETE'
+  "food-details": (id) => `/Food/${id}/`, //Thông tin chi tiết đồ ăn + Cập nhật chi tiết + Xóa đồ ăn // 'GET + PATCH + DELETE'
   "food-addtomenu": (id) => `/Food/${id}/add-to-menu`, // Thêm đồ ăn vào menu của cửa hàng // 'PATCH'
-  "food-review": (id) `/Food/${id}/review`, // Lấy review của đồ ăn và đăng review cho đồ ăn // 'GET + POST'
-  "food-status-update": (id) `/Food/${id}/update-food-status` // Cập nhật trạng thái đồ ăn và
+  "food-review": (id) => `/Food/${id}/review`, // Lấy review của đồ ăn và đăng review cho đồ ăn // 'GET + POST'
+  "food-status-update": (id) => `/Food/${id}/update-food-status` // Cập nhật trạng thái đồ ăn và
 };
 
 const axiosInstance = axios.create({
