@@ -1,14 +1,14 @@
 {% extends 'admin/base_site.html' %}
 {% block content %}
 <head>
-    <title>Thống kê doanh thu HiThuFood</title>
+    <title>Thống kê doanh thu</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=2">
-    <!--  Boostrap 3 cdn  -->
+    <!-- Boostrap 3 cdn -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-    <!-- thu vien Chart.js-->
+    <!-- Chart.js library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .nav-pills > li > a {
@@ -19,146 +19,193 @@
 </head>
 
 <body>
-    <ul class="nav nav-pills">
-        <li class="active"><a data-toggle="pill" href="#home">Doanh thu mỗi tháng</a></li>
-        <li><a data-toggle="pill" href="#menu1">Doanh thu mỗi quý</a></li>
-        <li><a data-toggle="pill" href="#menu2">Doanh thu mỗi năm</a></li>
-    </ul>
+<h3>THỐNG KÊ SỐ LƯỢNG</h3>
+<p>Hệ thống có tổng cộng: {{ total_user }} người dùng</p>
+<p>Hệ thống có tổng cộng: {{ total_store }} nhà hàng</p>
+<ul>
+    {% for store in store_stats %}
+    <li><strong>{{ store.name }}</strong> có {{ store.food_count }} món ăn</li>
+    {% endfor %}
+</ul>
 
-    <div class="container">
-        <canvas id="myChart"></canvas>
+<script>
+    let labels = [];
+    let values = [];
+
+    {% for store in store_stats %}
+        values.push({{ store.food_count }});
+        labels.push('{{ store.name }}');
+    {% endfor %}
+
+    window.onload = () => {
+        const foodCountCtx = document.getElementById('foodCountChart').getContext('2d');
+        new Chart(foodCountCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Số lượng món ăn',
+                    data: values,
+                    borderWidth: 1,
+                    backgroundColor: [
+                        'rgb(255, 99, 132)',
+                        'rgb(54, 162, 235)',
+                        'rgb(255, 205, 86)'
+                    ],
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+<canvas id="foodCountChart" width="600" height="250"></canvas> <!-- Kích thước vừa phải cho biểu đồ -->
+<div class="container">
+    <canvas id="monthlyRevenueChart"></canvas>
+</div>
+<ul class="nav nav-tabs">
+    <li class="active"><h3><a data-toggle="pill" href="#home">Doanh thu mỗi tháng</a></h3></li>
+    <li><h3><a data-toggle="pill" href="#menu1">&nbsp;&nbsp;Doanh thu mỗi quý</a></h3></li>
+    <li><h3><a data-toggle="pill" href="#menu2">&nbsp;&nbsp;Doanh thu mỗi năm</a></h3></li>
+</ul>
+
+<div class="tab-content">
+    <div id="home" class="tab-pane fade in active">
+        <h1>Thống kê doanh thu năm {{ current_year }}</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Doanh thu hàng tháng ({{ current_year }})</h3>
+                <canvas id="monthlyRevenueChartCanvas" width="800" height="700"></canvas> <!-- Kích thước vừa phải -->
+            </div>
+        </div>
+        <script>
+            // Monthly Revenue Chart
+            var monthlyCtx = document.getElementById('monthlyRevenueChartCanvas').getContext('2d');
+            var monthlyLabels = {{ monthly_labels|safe }};
+            var monthlyData = {{ monthly_data|safe }};
+
+            var monthlyChart = new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [{
+                        label: 'Doanh thu hàng tháng',
+                        data: monthlyData,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('vi-VN', {style: 'currency', currency: 'VND'});
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
     </div>
 
-    <div class="tab-content">
-        <div id="home" class="tab-pane fade in active">
-            <h1>Thống kê doanh thu năm {{ current_year }}</h1>
-            <div class="row">
-                <div class="col-md-6">
-                    <h3>Doanh thu hàng tháng ({{ current_year }})</h3>
-                    <canvas id="monthlyRevenueChart" width="600" height="400"></canvas>
-                </div>
+    <div id="menu1" class="tab-pane fade">
+        <h1>Thống kê doanh thu năm {{ current_year }}</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Doanh thu hàng quý ({{ current_year }})</h3>
+                <canvas id="quarterlyRevenueChartCanvas" width="600" height="530"></canvas> <!-- Kích thước vừa phải -->
             </div>
-            <script>
-                // Data for Monthly Revenue Chart
-                var monthlyCtx = document.getElementById('monthlyRevenueChart').getContext('2d');
-    var monthlyLabels = {{ monthly_labels|safe }};
-    var monthlyData = {{ monthly_data|safe }};
+        </div>
+        <script>
+            // Quarterly Revenue Chart
+            var quarterlyCtx = document.getElementById('quarterlyRevenueChartCanvas').getContext('2d');
+            var quarterlyLabels = {{ quarterly_labels|safe }};
+            var quarterlyData = {{ quarterly_data|safe }};
 
-    var monthlyChart = new Chart(monthlyCtx, {
-        type: 'line',
-        data: {
-            labels: monthlyLabels,
-            datasets: [{
-                label: 'Doanh thu hàng tháng',
-                data: monthlyData,
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 2,
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value, index, values) {
-                            return value.toLocaleString('vi-VN', {style: 'currency', currency: 'VND'});
+            var quarterlyChart = new Chart(quarterlyCtx, {
+                type: 'line',
+                data: {
+                    labels: quarterlyLabels,
+                    datasets: [{
+                        label: 'Doanh thu hàng quý',
+                        data: quarterlyData,
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('vi-VN', {style: 'currency', currency: 'VND'});
+                                }
+                            }
                         }
                     }
                 }
-            }
-        }
-    });
-            </script>
-        </div>
-
-        <div id="menu1" class="tab-pane fade">
-            <h1>Thống kê doanh thu năm {{ current_year }}</h1>
-            <div class="row">
-                <div class="col-md-6">
-                    <h3>Doanh thu hàng quý ({{ current_year }})</h3>
-                    <canvas id="quarterlyRevenueChart" width="600" height="400"></canvas>
-                </div>
-            </div>
-            <script>
-                // Data for Quarterly Revenue Chart
-    var quarterlyCtx = document.getElementById('quarterlyRevenueChart').getContext('2d');
-    var quarterlyLabels = {{ quarterly_labels|safe }};
-    var quarterlyData = {{ quarterly_data|safe }};
-
-    var quarterlyChart = new Chart(quarterlyCtx, {
-        type: 'line',
-        data: {
-            labels: quarterlyLabels,
-            datasets: [{
-                label: 'Doanh thu hàng quý',
-                data: quarterlyData,
-                borderColor: 'rgba(153, 102, 255, 1)',
-                borderWidth: 2,
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value, index, values) {
-                            return value.toLocaleString('vi-VN', {style: 'currency', currency: 'VND'});
-                        }
-                    }
-                }
-            }
-        }
-    });
-            </script>
-        </div>
-
-        <div id="menu2" class="tab-pane fade">
-            <h1>Doanh thu hàng năm từ khi Store được tạo</h1>
-            <div class="row">
-                <div class="col-md-4">
-                    <h3>Doanh thu hàng năm</h3>
-                    <canvas id="yearlyRevenueChart" width="1000" height="800"></canvas>
-                </div>
-            </div>
-            <script>
-                // Data for Yearly Revenue Chart
-    var yearlyCtx = document.getElementById('yearlyRevenueChart').getContext('2d');
-    var yearlyLabels = {{ yearly_labels|safe }};
-    var yearlyData = {{ yearly_data|safe }};
-
-    var yearlyChart = new Chart(yearlyCtx, {
-        type: 'line',
-        data: {
-            labels: yearlyLabels,
-            datasets: [{
-                label: 'Doanh thu hàng năm',
-                data: yearlyData,
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 2,
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value, index, values) {
-                            return value.toLocaleString('vi-VN', {style: 'currency', currency: 'VND'});
-                        }
-                    }
-                }
-            }
-        }
-    });
-            </script>
-        </div>
+            });
+        </script>
     </div>
+
+    <div id="menu2" class="tab-pane fade">
+        <h1>Doanh thu hàng năm từ khi cửa hàng được tạo</h1>
+        <div class="row">
+            <div class="col-md-4">
+                <h3>Doanh thu hàng năm</h3>
+                <canvas id="yearlyRevenueChartCanvas" width="700" height="830"></canvas> <!-- Kích thước vừa phải -->
+            </div>
+        </div>
+        <script>
+            // Yearly Revenue Chart
+            var yearlyCtx = document.getElementById('yearlyRevenueChartCanvas').getContext('2d');
+            var yearlyLabels = {{ yearly_labels|safe }};
+            var yearlyData = {{ yearly_data|safe }};
+
+            var yearlyChart = new Chart(yearlyCtx, {
+                type: 'line',
+                data: {
+                    labels: yearlyLabels,
+                    datasets: [{
+                        label: 'Doanh thu hàng năm',
+                        data: yearlyData,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('vi-VN', {style: 'currency', currency: 'VND'});
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+    </div>
+</div>
+
 </body>
 
 {% endblock %}

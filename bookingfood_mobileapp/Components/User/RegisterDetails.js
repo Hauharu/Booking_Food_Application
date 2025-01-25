@@ -96,24 +96,6 @@ export default function RegisterDetails() {
                         </Picker>
                     </View>
 
-                    <View style={{ marginTop: 20 }}>
-                        <Text style={Styles.inputLabel}>Mã Sinh Viên</Text>
-                        <TextInput
-                            style={Styles.inputControl}
-                            placeholder="Nhập mã số sinh viên"
-                            onChangeText={(alumni_account_code) => setRegisterInfo({ ...RegisterInfo, alumni_account_code })}
-                        />
-                    </View>
-
-                    <View style={{ marginTop: 20 }}>
-                        <Text style={Styles.inputLabel}>Ngày Sinh</Text>
-                        <TouchableOpacity onPress={showDatepicker}>
-                            <Text style={Styles.inputControl}>
-                                {dateOfBirth.toLocaleDateString()}  {/* Hiển thị ngày đã chọn */}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-
                     {showDatePicker && (
                         <DateTimePicker
                             testID="dateTimePicker"

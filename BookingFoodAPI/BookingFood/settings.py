@@ -161,7 +161,6 @@ FIREBASE_CONFIG = {
     'measurementId': "G-GTRY55R75P"
 }
 
-
 # Chỉ định model User tùy chỉnh
 AUTH_USER_MODEL = 'BookingFoodApp.User'
 

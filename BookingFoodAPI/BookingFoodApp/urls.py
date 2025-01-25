@@ -5,7 +5,7 @@ from .views import FoodSearchView
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register('Users', views.UserViewSet, basename='Users')
+router.register('User', views.UserViewSet, basename='Users')
 router.register('Store', views.StoreViewSet, basename='store')
 # router.register('Menu', views.MenuViewSet, basename='Menu')
 router.register('Category', views.CategoryViewSet, basename='Category')

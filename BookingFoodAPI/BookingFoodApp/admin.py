@@ -3,6 +3,8 @@ from datetime import datetime
 from collections import defaultdict
 from .models import Menu, Food, Store, User, Comment, Order, OrderDetail, UserFollowedStore, Address, Category, Review
 from . import cloud_path
+from django.db.models import Count
+from . import dao
 from django.urls import path
 from django.template.response import TemplateResponse
 from django.contrib import admin
@@ -62,8 +64,20 @@ class BookingFoodAdminSite(admin.AdminSite):
         yearly_labels = sorted(yearly_revenue.keys())  # Sắp xếp các năm
         yearly_data = [yearly_revenue[year] for year in yearly_labels]  # Lấy doanh thu cho từng năm
 
+        # Lấy tổng số nhà hàng và người dùng
+        total_store = dao.count_store()
+        total_user = dao.count_user()
+
+        # Thống kê món ăn của nhà hàng
+        stats = Store.objects \
+            .annotate(food_count=Count('food')) \
+            .values('id', 'name', 'food_count')
+
         # Chuẩn bị dữ liệu gửi vào template để hiển thị
         context = {
+            'total_user': total_user,
+            'total_store': total_store,
+            'store_stats': stats,
             'monthly_labels': monthly_labels,
             'monthly_data': monthly_data,
             'quarterly_labels': quarterly_labels,
@@ -82,6 +96,7 @@ admin_site = BookingFoodAdminSite(name="BookingFood")
 # Form để tùy chỉnh mô hình User trong giao diện quản trị
 class UserForm(forms.ModelForm):
     description = forms.CharField(widget=CKEditorUploadingWidget())
+
     class Meta:
         model = User
         fields = '__all__'
@@ -89,11 +104,9 @@ class UserForm(forms.ModelForm):
 
 # Cấu hình cho mô hình User
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['id', 'username', 'user_role', 'image', 'email', 'phone', 'is_verified', 'date_joined',
-                    'is_active']
+    list_display = ['id', 'username', 'user_role', 'image', 'email', 'phone', 'is_verified', 'date_joined', 'is_active']
     search_fields = ['username', 'email', 'phone']
-    list_filter = ['user_role', 'is_verified',
-                   'is_active']
+    list_filter = ['user_role', 'is_verified', 'is_active']
     form = UserForm
 
     def image(self, user):
@@ -177,6 +190,7 @@ class OrderDetailInline(admin.TabularInline):
     model = OrderDetail
     extra = 1
 
+
 # Cấu hình cho mô hình Order
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['user', 'total', 'delivery_fee', 'payment_status', 'order_status']  # Các cột hiển thị
@@ -195,9 +209,11 @@ class OrderAdmin(admin.ModelAdmin):
 # Form để tùy chỉnh mô hình Comment trong giao diện quản trị
 class CommentForm(forms.ModelForm):
     content = forms.CharField(widget=CKEditorUploadingWidget())
+
     class Meta:
         model = Comment
         fields = '__all__'
+
 
 # Cấu hình cho mô hình Comment
 class CommentAdmin(admin.ModelAdmin):
@@ -212,6 +228,7 @@ class ReviewForm(forms.ModelForm):
     class Meta:
         model = Review
         fields = '__all__'
+
 
 # Cấu hình cho mô hình Review
 class ReviewAdmin(admin.ModelAdmin):
@@ -228,6 +245,7 @@ class MenuForm(forms.Form):
     class Meta:
         model = Menu
         field = '__all__'
+
 
 # Cấu hình form cho mô hình Menu
 class MenuAdmin(admin.ModelAdmin):

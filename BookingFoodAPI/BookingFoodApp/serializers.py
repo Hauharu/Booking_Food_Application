@@ -1,46 +1,7 @@
-from django.template.defaulttags import comment
-from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from .models import User, Store, Menu, Category, Comment, Food, Order, OrderDetail, Address, UserFollowedStore, Review
+from .models import User, Store, Menu, Category, Comment, Food, Order, OrderDetail, Address, UserFollowedStore, Review, \
+    Cart, CartItem, Notification
 from . import cloud_path
-
-
-# Serializer quản lý dữ liệu cửa hàng
-class StoreSerializer(serializers.ModelSerializer):
-    follower_number = serializers.SerializerMethodField()
-
-    def get_follower_number(self, store):
-        # Đếm số lượng người dùng theo dõi cửa hàng
-        return UserFollowedStore.objects.filter(store=store).count()
-
-    image = serializers.SerializerMethodField(source='avatar')
-
-    def get_image(self, store):
-        # Trả về URL hình ảnh đại diện của cửa hàng nếu tồn tại
-        if store.avatar:
-            return '{cloud_path}{image_name}'.format(cloud_path=cloud_path, image_name=store.avatar)
-
-    class Meta:
-        model = Store  # Gắn serializer với model Store
-        fields = ['id', 'name', 'active', 'description', 'image', 'address_line',
-                  'follower_number', 'user']
-
-    # Serializer quản lý địa chỉ giao hàng
-
-
-class AddressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Address
-        fields = ['address_ship', 'latitude', 'longitude', 'user']
-
-
-# Serializer quản lý thông tin theo dõi cửa hàng
-class FollowSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserFollowedStore
-        fields = ['id', 'user', 'store', 'followed_at']
-
-    # Serializer quản lý thông tin người dùng
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -69,6 +30,44 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
 
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ['address_ship', 'latitude', 'longitude', 'user']
+
+
+# Serializer quản lý dữ liệu cửa hàng
+class StoreSerializer(serializers.ModelSerializer):
+    follower_number = serializers.SerializerMethodField()
+
+    def get_follower_number(self, store):
+        # Đếm số lượng người dùng theo dõi cửa hàng
+        return UserFollowedStore.objects.filter(store=store).count()
+
+    image = serializers.SerializerMethodField(source='avatar')
+
+    def get_image(self, store):
+        # Trả về URL hình ảnh đại diện của cửa hàng nếu tồn tại
+        if store.avatar:
+            return '{cloud_path}{image_name}'.format(cloud_path=cloud_path, image_name=store.avatar)
+
+    class Meta:
+        model = Store  # Gắn serializer với model Store
+        fields = ['id', 'name', 'active', 'description', 'image', 'address_line',
+                  'follower_number', 'user']
+
+    # Serializer quản lý địa chỉ giao hàng
+
+
+# Serializer quản lý thông tin theo dõi cửa hàng
+class UserFollowedStoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserFollowedStore
+        fields = ['id', 'user', 'store', 'followed_at']
+
+    # Serializer quản lý thông tin người dùng
+
+
 # Serializer quản lý thực đơn
 class MenuSerializer(serializers.ModelSerializer):
     class Meta:
@@ -76,14 +75,6 @@ class MenuSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'store']
 
     # Serializer quản lý danh mục món ăn
-
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ['id', 'name']
-
-    # Serializer quản lý món ăn
 
 
 class FoodSerializer(serializers.ModelSerializer):
@@ -100,6 +91,87 @@ class FoodSerializer(serializers.ModelSerializer):
         model = Food
         fields = ['id', 'name', 'price', 'description', 'start_time', 'end_time', 'status',
                   'average_rating', 'image', 'store', 'menu', 'categories']
+
+
+class CartSerializer(serializers.ModelSerializer):
+    cart_details = serializers.SerializerMethodField('get_cart_details')
+    total_amount = serializers.SerializerMethodField('get_total_amount')
+
+    def get_cart_details(self, cart):
+        cart_details = cart.cartdetail_set.filter(active=True)
+        serializer = CartItemSerializer(cart_details, many=True)
+        return serializer.data
+
+    def get_total_amount(self, cart):
+        cart_details = cart.cartdetail_set.filter(active=True)
+        total = sum(detail.amount for detail in cart_details)
+
+        return total
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'user', 'total', 'store', 'created_date', 'active', 'cart_details']
+
+
+class CartItemSerializer(serializers.ModelSerializer):
+    food = serializers.SerializerMethodField('get_food')
+
+    def get_food(self, obj):
+        f = obj.food
+        return FoodSerializer(f).data
+
+    class Meta:
+        model = CartItem
+        fields = ['id', 'cart', 'food', 'quantity', 'created_date', 'updated_date']
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+
+    # Serializer quản lý món ăn
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    details = serializers.SerializerMethodField()
+
+    def get_details(self, order):
+        # Lấy danh sách chi tiết đơn hàng
+        order_details = order.order_details.all()
+        return OrderDetailSerializer(order_details, many=True).data
+
+    food_price = serializers.SerializerMethodField()
+
+    def get_food_price(self, order):
+        # Tính giá món ăn bằng cách trừ phí giao hàng từ tổng giá
+        return order.total - order.delivery_fee
+
+    user_name = serializers.SerializerMethodField()
+
+    def get_user_name(self, order):
+        # Lấy tên đầy đủ của người dùng, nếu không có thì lấy username
+        name = order.user.first_name + ' ' + order.user.last_name
+        if name == ' ':
+            return order.user.username
+        return name
+
+    address = serializers.SerializerMethodField()  # Trường tùy chỉnh để lấy địa chỉ giao hàng
+
+    def get_address(self, order):
+        # Lấy địa chỉ giao hàng từ order
+        return order.address_ship.address_ship
+
+    class Meta:
+        model = Order  # Gắn serializer với model Order
+        fields = ['id', 'address', 'user', 'user_name', 'store', 'order_status',
+                  'payment_status', 'total', 'delivery_fee', 'food_price', 'created_date', 'details']
+
+
+class OrderDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderDetail
+        fields = ['food', 'unit_price', 'quantity']
 
 
 # Serializer quản lý món ăn trong danh mục
@@ -141,47 +213,8 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ['id', 'review', 'rating', 'name', 'food']
 
-    # Serializer quản lý chi tiết đơn hàng
 
-
-class OrderDetailSerializer(serializers.ModelSerializer):
+class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = OrderDetail
-        fields = ['food', 'unit_price', 'quantity']
-
-    # Serializer quản lý đơn hàng
-
-
-class OrderSerializer(serializers.ModelSerializer):
-    details = serializers.SerializerMethodField()
-
-    def get_details(self, order):
-        # Lấy danh sách chi tiết đơn hàng
-        order_details = order.order_details.all()
-        return OrderDetailSerializer(order_details, many=True).data
-
-    food_price = serializers.SerializerMethodField()
-
-    def get_food_price(self, order):
-        # Tính giá món ăn bằng cách trừ phí giao hàng từ tổng giá
-        return order.total - order.delivery_fee
-
-    user_name = serializers.SerializerMethodField()
-
-    def get_user_name(self, order):
-        # Lấy tên đầy đủ của người dùng, nếu không có thì lấy username
-        name = order.user.first_name + ' ' + order.user.last_name
-        if name == ' ':
-            return order.user.username
-        return name
-
-    address = serializers.SerializerMethodField()  # Trường tùy chỉnh để lấy địa chỉ giao hàng
-
-    def get_address(self, order):
-        # Lấy địa chỉ giao hàng từ order
-        return order.address_ship.address_ship
-
-    class Meta:
-        model = Order  # Gắn serializer với model Order
-        fields = ['id', 'address', 'user', 'user_name', 'store', 'order_status',
-                  'payment_status', 'total', 'delivery_fee', 'food_price', 'created_date', 'details']
+        model = Notification
+        fields = ['id', 'message', 'user', 'created_date']

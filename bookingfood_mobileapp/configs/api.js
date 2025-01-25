@@ -17,10 +17,15 @@ const apiEndpoints = {
   "current-store-comment": (id) => `/Store/${id}/comment/`, //Bình luận cửa hàng 'GET + POST'
   "current-store-follow": (id) => `/Store/${id}/follow/`, //Chức năng để theo dõi cửa hàng
   "current-store-food": (id) => `/Store/${id}/food/`, // Chức năng lấy danh sách đồ ăn cửa hàng và thêm đồ ăn cho cửa hàng 'GET + POST'
+  "current-store-menu": (id) => `/Store/${id}/menus/`, // Chức năng lấy menu của cửa hàng và hiển thị các đồ ăn trong menu đó 'GET'
   "current-store-update": (id) => `/Store/${id}/update/`, // Chức năng cập nhật thông tin cửa hàng 'PATCH'
 
   //Đồ ăn
-  "food": "/Food/" // Thêm đường dẫn cho "food"
+  "food": "/Food/", // Thêm đường dẫn cho "food , lấy danh sách toàn bộ đồ ăn trong database // 'GET'
+  "food-details": (id) => `/Food/${id}/`, //Thông tin chi tiết đồ ăn + Cập nhật chi tiết + Xóa đồ ăn // 'GET + PATCH + DELETE'
+  "food-addtomenu": (id) => `/Food/${id}/add-to-menu`, // Thêm đồ ăn vào menu của cửa hàng // 'PATCH'
+  "food-review": (id) => `/Food/${id}/review`, // Lấy review của đồ ăn và đăng review cho đồ ăn // 'GET + POST'
+  "food-status-update": (id) => `/Food/${id}/update-food-status` // Cập nhật trạng thái đồ ăn và
 };
 
 const axiosInstance = axios.create({
