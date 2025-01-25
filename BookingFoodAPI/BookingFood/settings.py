@@ -84,7 +84,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',  # Sử dụng MySQL làm cơ sở dữ liệu
         'NAME': 'bookingfood_db',  # Tên cơ sở dữ liệu
         'USER': 'root',  # Tên đăng nhập
-        'PASSWORD': '12345678@',  # Mật khẩu
+        'PASSWORD': 'Quang0913906329',  # Mật khẩu
         'HOST': '',  # Mặc định là localhost
     }
 }
@@ -167,5 +167,5 @@ AUTH_USER_MODEL = 'BookingFoodApp.User'
 # Cho phép thêm dấu `/` vào cuối URL
 APPEND_SLASH = True
 
-CLIENT_ID = 'pimRKTmqbLgT6ssbf5CbYP0eE4Jp6tr0xA46ZjT6'
-CLIENT_SECRET = 'kOjY8zo3p28EqGeEhncezduYlRR9pxN61N0ct5s8uvDIDXvWiExmCQ27m2CFqNuWtR72XSEnEZL5OQqixzr7lwxBiZExUNrXKgkDdQ0bAwnM3pyCJcOwTKvlk2hYd3KU'
+CLIENT_ID = 'rr3TePRRMPvG3by2NtjTpEWdNFbK84o5azlLyTx0'
+CLIENT_SECRET = 'Jut5VtggKAM4kjPj13R7cYAAa03kVysNmQKsAoqRijYnf2GD320u1WUwv9L92b1do8BB1Otk2YfJcv5ITiU5mfwDeiZA84rkwhb6kazLNH75BQLAtK0nxFQjJhfsEIQd'
