@@ -150,7 +150,7 @@ function Login({ navigation: any }) {
                 <View style={Styles.header}>
                     <Image
                         style={Styles.headerLogo}
-                        source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Logo_DH_M%E1%BB%9F_TPHCM.png' }}
+                        source={require('../../assets/anh.png')}
                         alt="logo"
                     />
                 </View>

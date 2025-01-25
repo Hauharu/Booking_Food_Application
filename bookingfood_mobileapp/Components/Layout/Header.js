@@ -3,7 +3,7 @@ import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import VectorIcon from '../../utils/VectorIcon';
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
-import logo from '../../assets/logo.png';
+import logo from '../../assets/anh.png';
 
 const Header =  () => {
     const navigation = useNavigation()

@@ -54,14 +54,14 @@ function Register() {
                 <View style={Styles.header}>
                     <Image
                         style={Styles.headerLogo}
-                        source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Logo_DH_M%E1%BB%9F_TPHCM.png' }}
+                        source={require('../../assets/anh.png')}
                         alt="logo"
                     />
                 </View>
 
                 <View>
                     <Text style={Styles.titleText}>Đăng Ký</Text>
-                    <Text style={Styles.subTitleText}>Tạo tài khoản để kết nối với cựu sinh viên</Text>
+                    <Text style={Styles.subTitleText}>Tạo tài khoản để đăng nhập</Text>
                 </View>
 
                 <View style={Styles.form}>
