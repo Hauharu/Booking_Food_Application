@@ -68,11 +68,7 @@ class UserFollowedStoreSerializer(serializers.ModelSerializer):
     # Serializer quản lý thông tin người dùng
 
 
-# Serializer quản lý thực đơn
-class MenuSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Menu
-        fields = ['id', 'name', 'description', 'store']
+
 
     # Serializer quản lý danh mục món ăn
 
@@ -92,6 +88,12 @@ class FoodSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'price', 'description', 'start_time', 'end_time', 'status',
                   'average_rating', 'image', 'store', 'menu', 'categories']
 
+# Serializer quản lý thực đơn
+class MenuSerializer(serializers.ModelSerializer):
+    food = FoodSerializer(many=True, read_only=True)
+    class Meta:
+        model = Menu
+        fields = ['id', 'name', 'description', 'store', 'food']
 
 class CartSerializer(serializers.ModelSerializer):
     cart_details = serializers.SerializerMethodField('get_cart_details')

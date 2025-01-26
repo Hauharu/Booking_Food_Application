@@ -23,6 +23,7 @@ from django.db.models import Q, Count
 from .models import Food
 from .serializers import FoodSerializer
 
+#API tìm kiếm đồ ăn
 class FoodSearchView(APIView):
     def get(self, request):
         # # Retrieve form-data
@@ -84,19 +85,7 @@ class FoodSearchView(APIView):
 
 
 
-# class OrderViewSet(viewsets.ModelViewSet):
-#     queryset = Order.objects.all()
-#     serializer_class = OrderSerializer
-
-
-
-# class MenuViewSet(viewsets.ModelViewSet):
-#     queryset = Menu.objects.filter(active=True)
-#     serializer_class = MenuSerializer
-
-
-
-
+#Viewset cửa hàng
 class StoreViewSet(viewsets.ModelViewSet):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
@@ -239,7 +228,7 @@ class StoreViewSet(viewsets.ModelViewSet):
 
 
 
-
+#Viewset Người dùng
 class UserViewSet(viewsets.ViewSet):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
@@ -319,7 +308,7 @@ class UserViewSet(viewsets.ViewSet):
 
 
 
-
+#Viewset danh mục
 class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -349,16 +338,7 @@ class CommentViewSet(viewsets.ViewSet, generics.DestroyAPIView, generics.UpdateA
     serializer_class = CommentSerializer
 
 
-
-
-
-# class FoodViewSet(viewsets.ModelViewSet):
-#     queryset = Food.objects.all()
-#     serializer_class = FoodSerializer
-
-
-
-
+#Viewset Đồ ăn
 class FoodViewSet(viewsets.ViewSet, generics.DestroyAPIView, generics.ListAPIView, generics.RetrieveAPIView):
     queryset = Food.objects.filter(active=True)
     serializer_class = FoodSerializer
@@ -584,13 +564,7 @@ class FoodViewSet(viewsets.ViewSet, generics.DestroyAPIView, generics.ListAPIVie
     #     food = self.get_object()
     #     return Response(CommentSerializer(food.reviews, many=True).data, status=status.HTTP_200_OK)
 
-class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.all()
-    serializer_class = OrderSerializer
-
-
-
-# MENU_ITEM
+#Viewset Menu
 class MenuViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
     serializer_class = MenuSerializer
 
@@ -720,76 +694,7 @@ class MenuViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
         except Menu.DoesNotExist:
             return Response({'error': 'Không tìm thấy menu!'}, status=status.HTTP_404_NOT_FOUND)
 
-# class MenuViewSet(viewsets.ModelViewSet):
-#     queryset = Menu.objects.all()
-#     serializer_class = MenuSerializer
-#     parser_classes = [parsers.MultiPartParser]
-#
-#     def get_queryset(self):
-#         # Get the user making the request
-#         user = self.request.user
-#
-#         # If the user is authenticated and is a store owner
-#         if user.is_authenticated and hasattr(user, 'store'):
-#             # Return all menus for the store owned by the user
-#             return self.queryset.filter(store=user.store)
-#
-#         # If the user is authenticated and is a regular user
-#         elif user.is_authenticated and user.user_role == User.USER:
-#             # Return only active menus for the specific store (filtered by store ID from query params)
-#             store_id = self.request.query_params.get('store')
-#             if store_id:
-#                 return self.queryset.filter(store_id=store_id, active=True)
-#             return self.queryset.none()  # If no store is specified, return an empty queryset
-#
-#         # If the user is not authenticated or has no specific role, return no data
-#         return self.queryset.none()
-#
-#     def get_permissions(self):
-#         if self.action in ['list']:
-#             return [permissions.IsAuthenticated()]
-#         if self.action in ['update_menu', 'add_menu']:
-#             return [IsStoreOwner(), permissions.IsAuthenticated()]
-#         return [permissions.IsAuthenticated()]
-#
-#     def destroy(self, request, *args, **kwargs):
-#         instance = self.get_object()
-#         instance.active = False
-#         instance.save()
-#         return Response(data='Menu has been deactivated', status=status.HTTP_204_NO_CONTENT)
-#
-#     @action(methods=['post'], url_path='add', detail=False)
-#     def add_menu(self, request):
-#         data = request.data
-#         store_id = data.get('store')
-#         try:
-#             store = Store.objects.get(id=store_id)
-#         except Store.DoesNotExist:
-#             return Response(data={'detail': 'Store not found'}, status=status.HTTP_404_NOT_FOUND)
-#
-#         if store.user != request.user:
-#             return Response(data={'detail': 'You must be the owner of the store to add a menu.'}, status=status.HTTP_403_FORBIDDEN)
-#
-#         menu = Menu.objects.create(
-#             name=data['name'],
-#             description=data.get('description'),
-#             store=store
-#         )
-#         return Response(MenuSerializer(menu).data, status=status.HTTP_201_CREATED)
-#
-#     @action(methods=['patch'], url_path='update/(?P<menu_id>\d+)', detail=False)
-#     def update_menu(self, request, menu_id=None):
-#         try:
-#             menu = Menu.objects.get(id=menu_id)
-#         except Menu.DoesNotExist:
-#             return Response(data={'detail': 'Menu not found'}, status=status.HTTP_404_NOT_FOUND)
-#
-#         if menu.store.user != request.user:
-#             return Response(data={'detail': 'You must be the owner of the store to update this menu.'}, status=status.HTTP_403_FORBIDDEN)
-#
-#         data = request.data
-#         for field, value in data.items():
-#             setattr(menu, field, value)
-#
-#         menu.save()
-#         return Response(MenuSerializer(menu).data, status=status.HTTP_200_OK)
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+
