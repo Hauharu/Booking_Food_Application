@@ -7,7 +7,7 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register('User', views.UserViewSet, basename='Users')
 router.register('Store', views.StoreViewSet, basename='store')
-# router.register('Menu', views.MenuViewSet, basename='Menu')
+router.register('Menu', views.MenuViewSet, basename='Menu')
 router.register('Category', views.CategoryViewSet, basename='Category')
 router.register('Comment', views.CommentViewSet, basename='Comment')
 router.register('Order', views.OrderViewSet, basename='Order')

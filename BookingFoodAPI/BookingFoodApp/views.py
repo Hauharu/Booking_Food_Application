@@ -15,53 +15,22 @@ from .models import *
 from .perms import IsStoreOwner, IsCommentOwner
 from .serializers import (UserSerializer, StoreSerializer, MenuSerializer, CategorySerializer,
                           CommentSerializer, FoodInCategorySerializer, OrderSerializer, FoodSerializer,
-                          AddressSerializer, FollowSerializer, ReviewSerializer)
+                          AddressSerializer, ReviewSerializer, UserFollowedStoreSerializer)
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.db.models import Q
+from django.db.models import Q, Count
 from .models import Food
 from .serializers import FoodSerializer
 
 class FoodSearchView(APIView):
     def get(self, request):
-        # Retrieve form-data
-        query = request.data.get('q', '')  # Search term
-        category = request.data.get('category', None)  # Category ID
-        store = request.data.get('store', None)  # Store ID
-        min_price = request.data.get('min_price', None)  # Minimum price
-        max_price = request.data.get('max_price', None)
-
-        # Base query
-        foods = Food.objects.all()
-
-        # Filter by query if provided
-        if query:
-            foods = foods.filter(name__icontains=query)
-
-        # Filter by category if provided
-        if category:
-            foods = foods.filter(categories__id=category)
-
-        # Filter by store if provided
-        if store:
-            foods = foods.filter(store_id=store)
-
-        # Filter by min_price if provided
-        if min_price:
-            foods = foods.filter(price__gte=min_price)
-
-        # Filter by max_price if provided
-        if max_price:
-            foods = foods.filter(price__lte=max_price)
-
-        # Serialize the data
-        serializer = FoodSerializer(foods, many=True)
-        return Response(serializer.data)
-
-        # query = request.query_params.get('q', '')  # Search term
-        # category = request.query_params.get('category', None)  # Category ID
-        # store = request.query_params.get('store', None)  # Store ID
+        # # Retrieve form-data
+        # query = request.data.get('q', '')  # Search term
+        # category = request.data.get('category', None)  # Category ID
+        # store = request.data.get('store', None)  # Store ID
+        # min_price = request.data.get('min_price', None)  # Minimum price
+        # max_price = request.data.get('max_price', None)
         #
         # # Base query
         # foods = Food.objects.all()
@@ -78,9 +47,40 @@ class FoodSearchView(APIView):
         # if store:
         #     foods = foods.filter(store_id=store)
         #
+        # # Filter by min_price if provided
+        # if min_price:
+        #     foods = foods.filter(price__gte=min_price)
+        #
+        # # Filter by max_price if provided
+        # if max_price:
+        #     foods = foods.filter(price__lte=max_price)
+        #
         # # Serialize the data
         # serializer = FoodSerializer(foods, many=True)
         # return Response(serializer.data)
+
+        query = request.query_params.get('q', '')  # Search term
+        category = request.query_params.get('category', None)  # Category ID
+        store = request.query_params.get('store', None)  # Store ID
+
+        # Base query
+        foods = Food.objects.all()
+
+        # Filter by query if provided
+        if query:
+            foods = foods.filter(name__icontains=query)
+
+        # Filter by category if provided
+        if category:
+            foods = foods.filter(categories__id=category)
+
+        # Filter by store if provided
+        if store:
+            foods = foods.filter(store_id=store)
+
+        # Serialize the data
+        serializer = FoodSerializer(foods, many=True)
+        return Response(serializer.data)
 
 
 
@@ -136,9 +136,24 @@ class StoreViewSet(viewsets.ModelViewSet):
         data = request.data
         store = Store.objects.create(name=data['name'], description=data['description'],
                     address_line=data['address_line'], user=request.user, latitude=data['latitude'], longitude=data['longitude'],
-                    avatar=data['avatar'])
+                    image=data['image'])
 
         return Response(data=StoreSerializer(store).data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, *args, **kwargs):
+        store = self.get_object()  # Get the Store instance
+        data = request.data  # Get the data to update
+
+        # Check if the user is the store owner
+        if request.user != store.user:
+            return Response(data='Không thể sửa cửa hàng của người khác!', status=status.HTTP_400_BAD_REQUEST)
+
+        for field, value in data.items():
+            setattr(store, field, value)  # Update the fields
+
+        store.save()  # Save the updated instance
+
+        return Response(StoreSerializer(store).data, status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=True, url_path='menus', url_name='menus')
     def list_Menu_of_TaiKhoan(self, request, *args, **kwargs):
@@ -163,49 +178,29 @@ class StoreViewSet(viewsets.ModelViewSet):
     #     return Response(data=FoodSerializer(food, many=True).data, status=status.HTTP_200_OK)
 
 
-    @action(methods=['patch'], url_path='update', detail=True)
-    def patch_store(self, request, pk=None):
+    # @action(methods=['patch'], url_path='update', detail=True)
+    # def patch_store(self, request, pk=None):
+    #     store = self.get_object()  # Get the Store instance
+    #     data = request.data  # Get the data to update
+    #     if request.user != self.get_object().user:
+    #         return Response(data='Không thể sửa cửa hàng của người khác!',
+    #                         status=status.HTTP_400_BAD_REQUEST
+    #         )
+    #
+    #     for field, value in data.items():
+    #         setattr(store, field, value)  # Update the fields
+    #
+    #     # Save the updated instance
+    #     store.save()
+    #
+    #     return Response(StoreSerializer(store).data, status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=True, url_path='foods', url_name='foods')
+    def get_foods(self, request, pk=None):
         store = self.get_object()  # Get the Store instance
-        data = request.data  # Get the data to update
-        if request.user != self.get_object().user:
-            return Response(data='Không thể sửa cửa hàng của người khác!',
-                            status=status.HTTP_400_BAD_REQUEST
-            )
-
-        for field, value in data.items():
-            setattr(store, field, value)  # Update the fields
-
-        # Save the updated instance
-        store.save()
-
-        return Response(StoreSerializer(store).data, status=status.HTTP_200_OK)
-
-    @action(methods=['get', 'post'], url_path='food', detail=True)
-    def manage_food(self, request, pk):
-        instance = self.get_object()
-
-        if request.method == 'GET':
-            # Handle GET request to fetch food
-            food = None
-            if instance.user == request.user:
-                food = instance.food
-            else:
-                food = instance.food.filter(active=True)
-            return Response(data=FoodSerializer(food, many=True).data, status=status.HTTP_200_OK)
-
-        elif request.method == 'POST':
-            # Handle POST request to add food
-            data = request.data
-            try:
-                # Create the food item
-                food = instance.food.create(
-                    name=data['name'], image=data['image'], description=data['description'], price=data['price'],
-                    store=instance
-                )
-                return Response(data=FoodSerializer(food).data, status=status.HTTP_201_CREATED)
-            except Exception as e:
-                return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+        foods = store.foods.all()  # Assuming there's a related field `foods` in Store
+        serializer = FoodSerializer(foods, many=True)  # You will need a `FoodSerializer`
+        return Response(serializer.data)
 
     @action(methods=['post'], url_path='follow', detail=True)
     def follow(self, request, pk):
@@ -220,7 +215,7 @@ class StoreViewSet(viewsets.ModelViewSet):
             follow.delete()
             return Response(data='Đã hủy theo dõi!', status=status.HTTP_204_NO_CONTENT)
 
-        return Response(FollowSerializer(follow).data, status=status.HTTP_201_CREATED)
+        return Response(UserFollowedStoreSerializer(follow).data, status=status.HTTP_201_CREATED)
 
     @action(methods=['post', 'get'], url_path='comment', detail=True)
     def comment(self, request, pk):
@@ -314,7 +309,7 @@ class UserViewSet(viewsets.ViewSet):
     @action(methods=['get'], url_path='current-user/followed-store', detail=False)
     def get_followed_store(self, request):
         user = request.user
-        return Response(FollowSerializer(user.subscriptions, many=True).data,
+        return Response(UserFollowedStoreSerializer(user.subscriptions, many=True).data,
                         status=status.HTTP_200_OK)
 
     @action(methods=['get'], url_path='current-user/my-order', detail=False)
@@ -376,6 +371,17 @@ class FoodViewSet(viewsets.ViewSet, generics.DestroyAPIView, generics.ListAPIVie
 
     def get_queryset(self):
         queryset = self.queryset
+        user = self.request.user  # Get the authenticated user
+
+        # Filter food by the store of the authenticated user
+        if user.user_role == 'STORE':  # Replace with actual role logic
+            # Store owners should see only foods from their own store
+            queryset = queryset.filter(store__user=user)
+        else:
+            # Normal users can see foods from all stores (or based on other logic)
+            queryset = queryset.filter(active=True)  # Only fetch foods from the store owned by the user
+
+        # Apply other filters if provided
         q = self.request.query_params.get('q')  # Search query
         category_id = self.request.query_params.get('category_id')  # Category filter
         store_id = self.request.query_params.get('store_id')
@@ -383,11 +389,10 @@ class FoodViewSet(viewsets.ViewSet, generics.DestroyAPIView, generics.ListAPIVie
         if q:
             queryset = queryset.filter(name__icontains=q)  # Filter by food name (search query)
         if category_id:
-            queryset = queryset.filter(categories__id=category_id)# Filter by category
+            queryset = queryset.filter(categories__id=category_id)  # Filter by category
         if store_id:
-            queryset = queryset.filter( store_id=store_id)  # Assuming you have a `store_id` field in your Food model
-        if self.action in ['partial_update']:
-            queryset = Food.objects.all()
+            queryset = queryset.filter(store_id=store_id)  # Assuming you have a `store_id` field in your Food model
+
         return queryset
 
     def destroy(self, request, *args, **kwargs):
@@ -531,6 +536,49 @@ class FoodViewSet(viewsets.ViewSet, generics.DestroyAPIView, generics.ListAPIVie
             status=status.HTTP_200_OK
         )
 
+    @action(methods=['post'], url_path='add-to-store', detail=True)
+    def add_to_store(self, request, pk=None):
+        """
+        Add food to a store.
+        """
+        food = self.get_object()
+        user = request.user
+
+        # Ensure the user is the store owner for the food
+        if food.store.user != user:
+            return Response(
+                {"error": "You are not authorized to add food to this store."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Validate store ownership
+        store = food.store
+
+        # Adding food to store (if needed)
+        if store.user != user:
+            return Response(
+                {"error": "You are not authorized to modify food in this store."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get the data from the request
+        data = request.data
+        try:
+            # Create the food item
+            food = store.food.create(
+                name=data['name'], image=data['image'], description=data['description'],
+                price=data['price'], store=store
+            )
+            # Add categories to the food if provided
+            if 'categories' in data:
+                category_ids = data['categories']
+                food.categories.set(category_ids)
+
+            return Response(data=FoodSerializer(food).data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     # @action(methods=['get'], url_path='reviews-of-food', detail=True)
     # def get_review(self, request, pk):
     #     food = self.get_object()
@@ -539,6 +587,138 @@ class FoodViewSet(viewsets.ViewSet, generics.DestroyAPIView, generics.ListAPIVie
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
+
+
+
+# MENU_ITEM
+class MenuViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
+    serializer_class = MenuSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+
+        # Ensure the user is authenticated and has the 'STORE' role
+        if user.is_verified and user.user_role == User.STORE:
+            # Filter menus that belong to the user's store
+            menu_queryset = Menu.objects.filter(store=user.store)
+
+            # Apply keyword search if provided
+            kw = self.request.query_params.get('kw')
+            if kw:
+                menu_queryset = menu_queryset.filter(name__icontains=kw)
+
+            return menu_queryset
+
+        # If the user is not authenticated or not a store owner, return an empty queryset
+        return Menu.objects.none()
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'delete', 'destroy', 'set_status_menu']:
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
+
+    def list(self, request):
+        user = request.user
+
+        # Ensure user is authenticated and is a store owner
+        if user.is_verified and user.user_role == User.STORE:
+            menus = Menu.objects.filter(store=user.store, active=True)
+            serializer = MenuSerializer(menus, many=True)
+            return Response({"message": "lấy menu cửa hàng thành công", "data": serializer.data},
+                            status=status.HTTP_200_OK)
+
+        return Response({"message": "You do not have permission to access menus!"}, status=status.HTTP_403_FORBIDDEN)
+
+    # tạo menu cho từng cửa hàng đăng nhập vào
+    def create(self, request, *args, **kwargs):
+        # Get the logged-in user
+        user = request.user
+
+        # Check if the user has the role 'STORE' and if the user is active and verified
+        if user.user_role != User.STORE or not user.is_active or user.is_superuser or user.is_staff:
+            return Response(
+                {"message": "Bạn không có quyền thực hiện chức năng này!"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Check if the user is verified
+        if not user.is_verified:
+            return Response(
+                {
+                    "message": f"Tài khoản cửa hàng {user.username} chưa được chứng thực để thực hiện chức năng thêm menu!"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Retrieve 'name' from the request data
+        name = request.data.get('name')
+
+        # Check if 'name' is provided
+        if name:
+            # Create the Menu and associate it with the logged-in user's store
+            menu = Menu.objects.create(
+                name=name,active=True,store=user.store  # Ensure that the store is linked correctly
+            )
+
+            # Return success response with created menu data
+            return Response(
+                {"message": f"Lưu thông tin menu thành công cho cửa hàng {user.store.name}!", "data": request.data},
+                status=status.HTTP_201_CREATED
+            )
+
+        # If 'name' is missing in the request data, return an error response
+        return Response(
+            {"message": "Lưu thông tin menu không thành công!"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # chỉnh sửa menu cho từng cửa hàng đăng nhập vào
+    def partial_update(self, request, pk=None):
+        try:
+            menu = Menu.objects.get(id=pk)
+            user = request.user
+
+            if user.user_role != User.STORE or not user.is_active or user.is_superuser or user.is_staff:
+                return Response({"message": "Bạn không có quyền thực hiện chức năng này!"},
+                                status=status.HTTP_403_FORBIDDEN)
+
+            if not user.is_verified:
+                return Response({
+                                    "message": f"Tài khoản cửa hàng {user.username} chưa được chứng thực để thực hiện chức năng chỉnh sửa menu!"},
+                                status=status.HTTP_403_FORBIDDEN)
+
+            # Use the serializer to update the menu
+            serializer = MenuSerializer(menu, data=request.data, partial=True)
+            if serializer.is_valid():
+                # Ensure that the menu belongs to the logged-in user
+                if menu.store == user.store:
+                    serializer.save()
+                    return Response({"message": "Chỉnh sửa thông tin menu thành công!", "data": serializer.data},
+                                    status=status.HTTP_200_OK)
+                return Response(
+                    {"message": "Chỉnh sửa thông tin menu không thành công! Bạn không có quyền chỉnh sửa menu này"},
+                    status=status.HTTP_400_BAD_REQUEST)
+
+            return Response({"message": "Chỉnh sửa thông tin menu không thành công!"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        except Menu.DoesNotExist:
+            return Response({'error': 'Không tìm thấy menu!'}, status=status.HTTP_404_NOT_FOUND)
+
+    # xóa menu cho từng cửa hàng đăng nhập vào
+    def destroy(self, request, *args, **kwargs):
+        try:
+            user = request.user
+            menu = self.get_object()  # Get the menu object
+            # Check if the logged-in user is the owner of the store
+            if user == menu.store.user:
+                super().destroy(request, *args, **kwargs)
+                return Response({"message": "Xóa thông tin menu thành công!"},
+                                status=status.HTTP_200_OK)
+
+            return Response({"message": "Menu này không thuộc quyền xóa của bạn!"},
+                            status=status.HTTP_403_FORBIDDEN)
+        except Menu.DoesNotExist:
+            return Response({'error': 'Không tìm thấy menu!'}, status=status.HTTP_404_NOT_FOUND)
 
 # class MenuViewSet(viewsets.ModelViewSet):
 #     queryset = Menu.objects.all()

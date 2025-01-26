@@ -44,12 +44,12 @@ class StoreSerializer(serializers.ModelSerializer):
         # Đếm số lượng người dùng theo dõi cửa hàng
         return UserFollowedStore.objects.filter(store=store).count()
 
-    image = serializers.SerializerMethodField(source='avatar')
+    image = serializers.SerializerMethodField(source='image')
 
     def get_image(self, store):
         # Trả về URL hình ảnh đại diện của cửa hàng nếu tồn tại
-        if store.avatar:
-            return '{cloud_path}{image_name}'.format(cloud_path=cloud_path, image_name=store.avatar)
+        if store.image:
+            return '{cloud_path}{image_name}'.format(cloud_path=cloud_path, image_name=store.image)
 
     class Meta:
         model = Store  # Gắn serializer với model Store

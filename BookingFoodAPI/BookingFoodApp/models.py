@@ -36,6 +36,9 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+    class Meta:
+        unique_together = ('username', 'email')
+
 
 # Address: Thông tin địa chỉ của người dùng.
 class Address(models.Model):
@@ -53,7 +56,7 @@ class Store(models.Model):
     name = models.CharField(max_length=255, null=False, unique=True)
     description = RichTextField(null=True, blank=True)
     image = CloudinaryField('image', default='', null=True, blank=True)
-    address_line = models.CharField(max_length=255, default='Ho Chi Minh City')
+    address_line = models.CharField(max_length=255, default='Ho Chi Minh City', blank=False)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     rating = models.FloatField(blank=True, null=True)

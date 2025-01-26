@@ -93,13 +93,13 @@ class BookingFoodAdminSite(admin.AdminSite):
 admin_site = BookingFoodAdminSite(name="BookingFood")
 
 
-# Form để tùy chỉnh mô hình User trong giao diện quản trị
-class UserForm(forms.ModelForm):
-    description = forms.CharField(widget=CKEditorUploadingWidget())
-
-    class Meta:
-        model = User
-        fields = '__all__'
+# # Form để tùy chỉnh mô hình User trong giao diện quản trị
+# class UserForm(forms.ModelForm):
+#     description = forms.CharField(widget=CKEditorUploadingWidget())
+#
+#     class Meta:
+#         model = User
+#         fields = '__all__'
 
 
 # Cấu hình cho mô hình User
@@ -107,7 +107,8 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ['id', 'username', 'user_role', 'image', 'email', 'phone', 'is_verified', 'date_joined', 'is_active']
     search_fields = ['username', 'email', 'phone']
     list_filter = ['user_role', 'is_verified', 'is_active']
-    form = UserForm
+    readonly_fields = ['date_joined', 'last_login']
+    # form = UserForm
 
     def image(self, user):
         # Hiển thị ảnh đại diện của người dùng dưới dạng hình ảnh trong admin panel
@@ -117,11 +118,20 @@ class UserAdmin(admin.ModelAdmin):
                                                                                        image_name=user.avatar))
 
 
+# Form để tùy chỉnh mô hình Store trong giao diện quản trị
+class StoreandMenuForm(forms.ModelForm):
+    description = forms.CharField(widget=CKEditorUploadingWidget())
+
+    class Meta:
+        model = Store
+        fields = '__all__'
+
 # Cấu hình cho mô hình Store
 class StoreAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'image_display', 'rating', 'description', 'address_line', 'created_date', 'active']
     search_fields = ['name', 'address_line']
     list_filter = ['active']
+    form = StoreandMenuForm
 
     def image_display(self, store):
         # Hiển thị ảnh đại diện của cửa hàng dưới dạng hình ảnh trong admin panel
@@ -158,10 +168,10 @@ class FoodForm(forms.ModelForm):
 
 
 class FoodAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'average_rating', 'store', 'price', 'status', 'start_time', 'end_time',
+    list_display = ['id', 'name', 'food_image', 'average_rating', 'store', 'price', 'status', 'start_time', 'end_time',
                     'menu', 'get_categories', 'created_date']
-    search_fields = ['name', 'store', 'menu']
-    list_filter = ['categories', 'average_rating']
+    search_fields = ['name', 'store__name', 'menu__name']
+    list_filter = ['categories', 'average_rating', 'store__name']
     readonly_fields = ['food_image']
     form = FoodForm
 
@@ -170,7 +180,7 @@ class FoodAdmin(admin.ModelAdmin):
         if food:
             return mark_safe(
                 "<img src='{cloud_path}{image_name}' width='50' height='50' />".format(cloud_path=cloud_path,
-                                                                                       image_name=food.image.name))
+                                                                                       image_name=food.image))
 
     def get_categories(self, obj):
         # Lấy các thể loại của món ăn và hiển thị dưới dạng chuỗi
@@ -251,7 +261,7 @@ class MenuForm(forms.Form):
 class MenuAdmin(admin.ModelAdmin):
     list_display = ["name", 'description', 'store']
     list_filter = ["store"]
-    forms = UserForm
+    forms = StoreandMenuForm
 
 
 # Cấu hình Admin cho mô hình Follow
