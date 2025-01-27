@@ -10,7 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAccountUser } from "../../configs/API/userApi";
 import { CurrentAccountUserContext } from "../../App";
 import { useNavigation } from "@react-navigation/native";
-import { CurrentAlumniAccountContext } from "../../App";
+import { CurrentAccountContext } from "../../App";
 import { getAlumniAccountt } from "../../configs/API/userApi";
 
 function Login({ navigation: any }) {
@@ -18,7 +18,7 @@ function Login({ navigation: any }) {
 
     const [currentUser, setCurrentUser] = useContext(CurrentUserContext)
     const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
-    const [currentAlumniAccount, setCurrentAlumniAccount] = useContext(CurrentAlumniAccountContext)
+    const [currentAccount, setCurrentAccount] = useContext(CurrentAccountContext)
 
     const [form, setForm] = useState({
         username: '',
@@ -72,7 +72,7 @@ function Login({ navigation: any }) {
             const getAlumni = await getAlumniAccountt(token, id);
 
             if (getAlumni) {
-                setCurrentAlumniAccount(getAlumni)
+                setCurrentAccount(getAlumni)
                 console.log(getAlumni)
                 return getAlumni
             }

@@ -84,7 +84,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',  # Sử dụng MySQL làm cơ sở dữ liệu
         'NAME': 'bookingfood_db',  # Tên cơ sở dữ liệu
         'USER': 'root',  # Tên đăng nhập
-        'PASSWORD': 'Quang0913906329',  # Mật khẩu
+        'PASSWORD': '12345678@',  # Mật khẩu
         'HOST': '',  # Mặc định là localhost
     }
 }
@@ -113,13 +113,13 @@ ACCOUNT_UNIQUE_EMAIL = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # # Cấu hình OAuth2
-# OAUTH2_PROVIDER = {'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore'}
+OAUTH2_PROVIDER = {'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore'}
 
 # *** Tích hợp Cloudinary ***
 cloudinary.config(
-    cloud_name="bookingfoodcloud",
-    api_key="326241581439736",
-    api_secret="QdYStlnjFI3BfXCdvM53Llk-GNo",  # Khóa API bí mật
+    cloud_name="dwwfgtxv4",
+    api_key="847843234855491",
+    api_secret="OEbZdz4wwMCsG_CEfXW6ScQFliI",  # Khóa API bí mật
     secure=True
 )
 
@@ -167,8 +167,7 @@ AUTH_USER_MODEL = 'BookingFoodApp.User'
 # Cho phép thêm dấu `/` vào cuối URL
 APPEND_SLASH = True
 
-# CLIENT_ID = 'rr3TePRRMPvG3by2NtjTpEWdNFbK84o5azlLyTx0'
-# CLIENT_SECRET = 'Jut5VtggKAM4kjPj13R7cYAAa03kVysNmQKsAoqRijYnf2GD320u1WUwv9L92b1do8BB1Otk2YfJcv5ITiU5mfwDeiZA84rkwhb6kazLNH75BQLAtK0nxFQjJhfsEIQd'
-
 CLIENT_ID = 'v9W0IjV5w5nWnr9D5n3l1pbRYhTVtyWioTIOFgdz'
 CLIENT_SECRET = 'WshDAP2cwNm9Fk9SUIJAlXGgXaaqYgz1nODksj7rq4gDnUWH23XWix1Um5SBLbQNvkqaGDNmfWGGfRzWkz3OWk26tJDzh4UO92x2B82A0zJY6mAWOZCAfWFSf3pfTyVc'
+
+GOOGLE_MAPS_API_KEY = 'AIzaSyD6RMZqMyTbefVRlasoDHbjLXEF3GUqM3I'

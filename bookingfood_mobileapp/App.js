@@ -1,69 +1,36 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import Login from './Components/User/Login';
-import Home from './Components/Home/Home';
-import AllView from './Components/AllView/AllView';
-import Register from './Components/User/Register';
-import RegisterDetails from './Components/User/RegisterDetails';
-import { createContext, use } from 'react';
-import { useState } from 'react';
-import { useReducer } from 'react';
+import 'react-native-gesture-handler';
+import React from 'react'
+import { ThemeManager, Colors } from 'react-native-ui-lib';
+import Navigation from './src/navigation/Navigation';
+import { legacy_createStore as createStore } from 'redux';
+import { Provider } from 'react-redux';
+import reducer from './src/store/reducer'
 
-const Stack = createStackNavigator();
+Colors.loadColors({
+  primary: '#0A8791',
+  yellow: '#FBA83C',
+  green: '#24C869',
+  grey: '#C2C2CB',
+  black: '#0E122B',
+});
 
-export const RegisterInfoContext = createContext()
-export const CurrentUserContext = createContext()
-export const CurrentAccountUserContext = createContext()
-export const CurrentAlumniAccountContext = createContext()
-export const MyUserContext = createContext();
+const buttonTheme = {
+  backgroundColor: Colors.primary,
+  borderRadius: 10,
+  height: 50,
+  labelStyle: {
+    fontWeight: 'bold',
+    color: 'white',
+  },
+};
+ThemeManager.setComponentTheme('Button', buttonTheme);
+
+const store = createStore(reducer)
+
 export default function App() {
-
-  const [RegisterInfo, setRegisterInfo] = useState({
-    username: '',
-    password: '',
-    email: '',
-    phone_number: '',
-    date_of_birth: '',
-    first_name: '',
-    last_name: '',
-    gender: '',
-    alumni_account_code: ''
-  });
-
-  const [currentAlumniAccount, setCurrentAlumniAccount] = useState({})
-  const [currentUser, setCurrentUser] = useState({})
-  const [currentAccountUser, setCurrentAccountUser] = useState({})
-  // const [user, dispatch] = useReducer(MyUserReducer, AsyncStorage.getItem("user") || null)
-  
-
   return (
-    
-    <CurrentAlumniAccountContext.Provider value={[currentAccountUser, setCurrentAccountUser]}>
-      <CurrentAccountUserContext.Provider value={[currentAccountUser, setCurrentAccountUser]}>
-        <CurrentUserContext.Provider value={[currentUser, setCurrentUser]}>
-          <RegisterInfoContext.Provider value={[RegisterInfo, setRegisterInfo]}>
-            <NavigationContainer>
-              <Stack.Navigator initialRouteName='Login'>
-                <Stack.Screen name="Login" component={Login}
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="Register" component={Register}
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="RegisterDetails" component={RegisterDetails}
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="AllView" component={AllView}
-                  options={{ headerShown: false }}
-                />
-              </Stack.Navigator>
-            </NavigationContainer>
-          </RegisterInfoContext.Provider>
-        </CurrentUserContext.Provider>
-      </CurrentAccountUserContext.Provider>
-    </CurrentAlumniAccountContext.Provider>
-    
+    <Provider store={store}>
+      <Navigation />
+    </Provider>
   );
 }
-
-
