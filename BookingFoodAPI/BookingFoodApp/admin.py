@@ -128,7 +128,7 @@ class StoreandMenuForm(forms.ModelForm):
 
 # Cấu hình cho mô hình Store
 class StoreAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'image_display', 'rating', 'description', 'address_line', 'created_date', 'active']
+    list_display = ['id', 'name', 'user','image_display', 'rating', 'description', 'address_line', 'created_date', 'active']
     search_fields = ['name', 'address_line']
     list_filter = ['active']
     form = StoreandMenuForm
@@ -191,7 +191,7 @@ class FoodAdmin(admin.ModelAdmin):
 
 # Cấu hình cho mô hình Category
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name']
+    list_display = ['name', 'pk']
     search_fields = ['name']
 
 
@@ -259,7 +259,7 @@ class MenuForm(forms.Form):
 
 # Cấu hình form cho mô hình Menu
 class MenuAdmin(admin.ModelAdmin):
-    list_display = ["name", 'description', 'store']
+    list_display = ["name", 'pk', 'description', 'store']
     list_filter = ["store"]
     forms = StoreandMenuForm
 

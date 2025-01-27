@@ -141,7 +141,7 @@ EMAIL_HOST_USER = 'trunghauu71@gmail.com'  # Tài khoản email
 EMAIL_HOST_PASSWORD = 'gnqm ddzq yzhw menp'  # Mật khẩu ứng dụng email
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # *** Cấu hình VNPay ***
 VNPAY_RETURN_URL = 'http://10.0.2.2:8000/payment_return'

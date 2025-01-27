@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from ckeditor.fields import RichTextField
 from cloudinary.models import CloudinaryField
 from django import forms
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.db.models import Avg, signals
 from django.dispatch import receiver
@@ -59,7 +59,7 @@ class Store(models.Model):
     address_line = models.CharField(max_length=255, default='Ho Chi Minh City', blank=False)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
-    rating = models.FloatField(blank=True, null=True)
+    rating = models.DecimalField(max_digits=2, decimal_places=1, blank=True, null=True)
     active = models.BooleanField(default=False)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
@@ -88,6 +88,33 @@ class Menu(BaseModel):
     def __str__(self):
         return self.name
 
+@receiver(post_save, sender=Menu)
+def notification_for_new_menu(sender, instance, created, **kwargs):
+    # Only send the email if the menu is created, not updated
+    if created:
+        user_follow_store = UserFollowedStore.objects.filter(store=instance.store)
+        for user_follow in user_follow_store:
+            send_mail(
+                f'Cửa hàng {user_follow.store.name} có menu mới!',
+                f'''Xin chào {user_follow.user.first_name} {user_follow.user.last_name},
+
+Cửa hàng {user_follow.store.name} mà bạn theo dõi đã có menu mới! Hãy nhanh tay khám phá và thưởng thức những món ăn ngon mới nhất từ {user_follow.store.name}.
+
+------------------------------------------------------------
+
+Thông tin menu:
+Tên menu: {instance.name}
+
+Chúng tôi mong muốn menu này có thể sẽ hợp ý với bạn!.
+
+Thân mến,
+QuangThuanFood''',
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[user_follow.user.email],
+                fail_silently=False
+            )
+
+
 
 
 
@@ -102,7 +129,7 @@ class Food(BaseModel):
         ('out_of_stock', 'Hết đồ ăn')
     ]
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='out_of_stock')
-    average_rating = models.FloatField(blank=True, null=True)
+    average_rating = models.DecimalField(max_digits=2, decimal_places=1, blank=True, null=True)
     image = CloudinaryField('image', default='', null=True)
     store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='food', blank=False)
     menu = models.ForeignKey(Menu, on_delete=models.PROTECT, related_name='food', null=True,blank=True)
@@ -115,14 +142,16 @@ class Food(BaseModel):
 
 
 @receiver(post_save, sender=Food)
-def notification(sender, instance, **kwargs):
-    user_follow_store = UserFollowedStore.objects.filter(store=instance.store)
-    for i in range(user_follow_store.count()):
-        send_mail(
-            f'Bạn ơi, cửa hàng {user_follow_store[i].store.name} có món mới!',
-            f'''Xin chào {user_follow_store[i].user.first_name} {user_follow_store[i].user.last_name},
+def notification(sender, instance, created, **kwargs):
+    # Only send the email if the food item is created, not updated
+    if created:
+        user_follow_store = UserFollowedStore.objects.filter(store=instance.store)
+        for user_follow in user_follow_store:
+            send_mail(
+                f'Bạn ơi, cửa hàng {user_follow.store.name} có món mới!',
+                f'''Xin chào {user_follow.user.first_name} {user_follow.user.last_name},
 
-Cửa hàng {user_follow_store[i].store.name} mà bạn theo dõi đã có món mới! Hãy nhanh tay khám phá và thưởng thức những món ăn ngon mới nhất từ {user_follow_store[i].store.name}.
+Cửa hàng {user_follow.store.name} mà bạn theo dõi đã có món mới! Hãy nhanh tay khám phá và thưởng thức những món ăn ngon mới nhất từ {user_follow.store.name}.
 
 ------------------------------------------------------------
 
@@ -133,14 +162,15 @@ Mô tả: {instance.description}
 
 Giá món: {instance.price}
 
-Ngoài ra, {user_follow_store[i].store.name} còn có nhiều món ngon khác đang chờ bạn khám phá.
+Ngoài ra, {user_follow.store.name} còn có nhiều món ngon khác đang chờ bạn khám phá.
 
 Thân mến,
-HiThuFood''',
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[user_follow_store[i].user.email],
-            fail_silently=False
-        )
+QuangThuanFood''',
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[user_follow.user.email],
+                fail_silently=False
+            )
+
 
 
 
@@ -254,7 +284,7 @@ class ActionBaseC(BaseModel):
 # Comment: Bình luận món ăn.
 class Comment(ActionBaseC):
     content = RichTextField(blank=True, null=True)
-    rate = models.SmallIntegerField(default=0, blank=False)
+    rate = models.FloatField(default=0, blank=False)
 
     def __str__(self):
         return self.content
@@ -274,6 +304,20 @@ def update_average_rating(sender, instance, **kwargs):
     stores.rating = total_rating / count if count > 0 else 0
     stores.save()
 
+@receiver(post_delete, sender=Comment)
+def update_average_rating_on_delete(sender, instance, **kwargs):
+    food = instance.food
+
+    # Get remaining reviews for the food item
+    Comments = Comment.objects.filter(food=food)
+
+    # Recalculate the average rating
+    total_rating = sum(review.rating for review in Comments)
+    count = Comments.count()
+
+    food.average_rating = total_rating / count if count > 0 else 0
+    food.save()
+
 
 class ActionBaseR(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
@@ -286,7 +330,7 @@ class ActionBaseR(BaseModel):
 # Comment: Bình luận món ăn.
 class Review(ActionBaseR):
     review = RichTextField(blank=True, null=True)
-    rating = models.PositiveSmallIntegerField(default=0, blank=False)
+    rating = models.FloatField(default=0, blank=False)
 
     def __str__(self):
         return self.review
@@ -303,6 +347,22 @@ def update_average_rating(sender, instance, **kwargs):
     # Tính average rating
     food.average_rating = total_rating / count if count > 0 else 0
     food.save()
+
+@receiver(post_delete, sender=Review)
+def update_average_rating_on_delete(sender, instance, **kwargs):
+    food = instance.food
+
+    # Get remaining reviews for the food item
+    reviews = Review.objects.filter(food=food)
+
+    # Recalculate the average rating
+    total_rating = sum(review.rating for review in reviews)
+    count = reviews.count()
+
+    food.average_rating = total_rating / count if count > 0 else 0
+    food.save()
+
+
 
 # Notification: Thông báo cho người dùng.
 class Notification(models.Model):

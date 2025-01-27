@@ -10,8 +10,10 @@ router.register('Store', views.StoreViewSet, basename='store')
 router.register('Menu', views.MenuViewSet, basename='Menu')
 router.register('Category', views.CategoryViewSet, basename='Category')
 router.register('Comment', views.CommentViewSet, basename='Comment')
+router.register('Review'    , views.ReviewViewSet, basename='Review')
 router.register('Order', views.OrderViewSet, basename='Order')
-router.register('Food', views.FoodViewSet, basename='Food')
+router.register('FoodM', views.FoodViewSet, basename='FoodM')
+router.register('FoodP', views.PublicFoodViewSet, basename='FoodP')
 
 urlpatterns = [
     path('', include(router.urls)),
