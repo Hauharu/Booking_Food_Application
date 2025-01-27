@@ -6,7 +6,7 @@ from django.utils.dateparse import parse_time
 from django.views.decorators.csrf import csrf_exempt
 from datetime import time
 from pytz import timezone
-from . import paginators
+from . import paginators, utils
 from rest_framework import viewsets, permissions, generics, parsers, status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action, permission_classes
@@ -767,9 +767,9 @@ class OrderViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAP
     def create(self, request, *args, **kwargs):
         """
         {
-            "address": 1
+            "address": 1,
             "store": 1,
-            "shipping_fee": 15000,
+            "delivery_fee": 15000,
             "items":
                 [
                     {
@@ -793,10 +793,17 @@ class OrderViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAP
             except Store.DoesNotExist:
                 raise Exception('Store not found')
 
-            order = Order.objects.create(user=request.user, store=store, total=0, shipping_fee=data['shipping_fee'],
-                                         address=address)
-            items_order = data['items']  # this is a list
-            for item in items_order:  # item is a dictionary
+            # Creating the order object
+            order = Order.objects.create(
+                user=request.user,
+                store=store,
+                total=0,
+                delivery_fee=data['delivery_fee'],  # Adjust field name
+                address_ship=address,  # Adjust field name
+            )
+
+            items_order = data['items']  # This is a list
+            for item in items_order:  # Item is a dictionary
                 try:
                     food = Food.objects.get(id=item['food'], active=True)
                     if food.store != store:
@@ -804,12 +811,16 @@ class OrderViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAP
                 except Food.DoesNotExist:
                     raise Exception(f'Food with id {item["food"]} not found')
 
-                # Create the order item without adding toppings
-                order_item = OrderDetail.objects.create(order=order, food=food, quantity=item['quantity'],
-                                                        unit_price=food.price)
-                order.total += order_item.unit_price_at_order * item['quantity']  # Include total price
+                # Create the order item without adding toppings (you might want to add toppings later)
+                order_item = OrderDetail.objects.create(
+                    order=order,
+                    food=food,
+                    quantity=item['quantity'],
+                    unit_price=food.price
+                )
+                order.total += order_item.unit_price * item['quantity']  # Include total price
 
-            order.total += data['shipping_fee']  # Add shipping fee
+            order.total += data['delivery_fee']  # Add delivery fee
             order.save()
             return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
 
