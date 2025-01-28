@@ -97,22 +97,28 @@ class MenuSerializer(serializers.ModelSerializer):
 
 class CartSerializer(serializers.ModelSerializer):
     cart_details = serializers.SerializerMethodField('get_cart_details')
-    total_amount = serializers.SerializerMethodField('get_total_amount')
+    # total_amount = serializers.SerializerMethodField('get_total_amount')
+    total_price = serializers.ReadOnlyField()
+
 
     def get_cart_details(self, cart):
-        cart_details = cart.cartdetail_set.filter(active=True)
+        cart_details = cart.cart_items.filter(active=True)
         serializer = CartItemSerializer(cart_details, many=True)
         return serializer.data
 
-    def get_total_amount(self, cart):
-        cart_details = cart.cartdetail_set.filter(active=True)
-        total = sum(detail.amount for detail in cart_details)
+    # def get_total_amount(self, cart):
+    #     cart_details = cart.cartdetail_set.filter(active=True)
+    #     total = sum(detail.amount for detail in cart_details)
+    #
+    #     return total
 
-        return total
+
 
     class Meta:
         model = Cart
-        fields = ['id', 'user', 'total', 'store', 'created_date', 'active', 'cart_details']
+        # fields = ['id', 'user', 'total', 'store', 'created_date', 'active', 'cart_details']
+        fields = ['id', 'user', 'total_price', 'created_date', 'active', 'cart_details']
+
 
 
 class CartItemSerializer(serializers.ModelSerializer):

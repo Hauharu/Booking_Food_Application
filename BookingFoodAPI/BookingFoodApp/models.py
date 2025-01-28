@@ -5,7 +5,7 @@ from cloudinary.models import CloudinaryField
 from django import forms
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from django.db.models import Avg, signals
+from django.db.models import Avg, signals, Sum, F
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
@@ -176,15 +176,27 @@ QuangThuanFood''',
 
 # Cart: Giỏ hàng.
 class Cart(BaseModel):
-    total = models.DecimalField(max_digits=9, decimal_places=2)
-    user = models.ForeignKey(User, on_delete=models.RESTRICT, null=False)
+    total = models.DecimalField(max_digits=9, decimal_places=2, null=True, default=0.0)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
     food = models.ManyToManyField(Food, related_name='cart', through='CartItem')
+
+    @property
+    def total_price(self):
+        """
+        Tính tổng giá trị của tất cả CartDetail liên quan đến Cart này.
+        Tổng được tính bằng quantity * food.price.
+        """
+        cart_details = self.cart_items.filter(active=True)
+        total = cart_details.aggregate(
+            total_price=Sum(F('quantity') * F('food__price'))
+        )['total_price']
+        return total or 0  # Trả về 0 nếu không có món nào trong Cart
 
 
 # Cart_item: Chi tiết giỏ hàng.
 class CartItem(BaseModel):
-    quantity = models.IntegerField(null=False)
-    cart = models.ForeignKey(Cart, related_name='cart_items', on_delete=models.RESTRICT, null=False)
+    quantity = models.IntegerField(null=True, default=0)
+    cart = models.ForeignKey(Cart, related_name='cart_items', on_delete=models.CASCADE, null=False)
     food = models.ForeignKey(Food, related_name='cart_items', on_delete=models.RESTRICT, null=False)
 
 

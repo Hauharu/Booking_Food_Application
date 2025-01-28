@@ -4,8 +4,10 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.utils.dateparse import parse_time
 from django.views.decorators.csrf import csrf_exempt
-from datetime import time
+from datetime import time, datetime
 from pytz import timezone
+from rest_framework.exceptions import ValidationError
+
 from . import paginators, utils
 from rest_framework import viewsets, permissions, generics, parsers, status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -15,7 +17,7 @@ from .models import *
 from .perms import *
 from .serializers import (UserSerializer, StoreSerializer, MenuSerializer, CategorySerializer,
                           CommentSerializer, FoodInCategorySerializer, OrderSerializer, FoodSerializer,
-                          AddressSerializer, ReviewSerializer, UserFollowedStoreSerializer)
+                          AddressSerializer, ReviewSerializer, UserFollowedStoreSerializer, CartSerializer)
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -66,27 +68,33 @@ class FoodSearchView(APIView):
         store = request.query_params.get('store', None)  # Store ID
         min_price = request.query_params.get('min_price', None)  # Minimum price
         max_price = request.query_params.get('max_price', None)
+        max_rating = request.query_params.get('max_rating', None)
 
         # Base query
         foods = Food.objects.all()
 
-        # Filter by query if provided
+        # Lọc theo tên
         if query:
             foods = foods.filter(name__icontains=query)
 
-        # Filter by category if provided
+        # Lọc theo danh mục
         if category:
             foods = foods.filter(categories__id=category)
 
-        # Filter by store if provided
+        # Lọc theo cửa hàng
         if store:
             foods = foods.filter(store_id=store)
 
+        #Lọc trong khoảng giá xác định
         if min_price:
             foods = foods.filter(price__gte=min_price)
 
         if max_price:
             foods = foods.filter(price__lte=max_price)
+
+        # Lọc theo đánh giá (Less than equal)
+        if max_rating:
+            foods = foods.filter(average_rating__lte=max_rating)
 
         # Serialize the data
         serializer = FoodSerializer(foods, many=True)
@@ -785,57 +793,53 @@ class OrderViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAP
         """
         data = request.data
         try:
-            try:
-                store = Store.objects.get(id=data['store'], active=True)
-                address = Address.objects.get(id=data['address'])
-                if request.user == store.user:
-                    raise Exception('Bạn không thể đặt đơn trên chính cửa hàng bạn được')
-            except Store.DoesNotExist:
-                raise Exception('Store not found')
+            store = Store.objects.get(id=data['store'], active=True)
+            address = Address.objects.get(id=data['address'])
+            if request.user == store.user:
+                raise Exception('Bạn không thể đặt đơn trên chính cửa hàng bạn được')
+        except Store.DoesNotExist:
+            raise Exception('Store not found')
 
-            # Creating the order object
+            # Get the user's active cart
+            cart = Cart.objects.filter(user=request.user, active=True).first()
+            if not cart:
+                raise ValidationError("No active cart found.")
+
+            # Check if cart items belong to the same store
+            cart_items = CartItem.objects.filter(cart=cart, active=True)
+            for item in cart_items:
+                if item.food.store != store:
+                    raise ValidationError(f'Food {item.food.name} does not belong to the specified store.')
+
+            # Create the order object
             order = Order.objects.create(
                 user=request.user,
                 store=store,
-                total=0,
-                delivery_fee=data['delivery_fee'],  # Adjust field name
-                address_ship=address,  # Adjust field name
+                total=cart.total_price + data['delivery_fee'],  # Use the total_price property from Cart
+                delivery_fee=data['delivery_fee'],
+                address_ship=address,
             )
 
-            items_order = data['items']  # This is a list
-            for item in items_order:  # Item is a dictionary
-                try:
-                    food = Food.objects.get(id=item['food'], active=True)
-                    if food.store != store:
-                        raise Exception(f'Food with id {item["food"]} does not belong to the specified store')
-                except Food.DoesNotExist:
-                    raise Exception(f'Food with id {item["food"]} not found')
-
-                # Create the order item without adding toppings (you might want to add toppings later)
+            # Transfer cart items to the order
+            for cart_item in cart_items:
                 order_item = OrderDetail.objects.create(
                     order=order,
-                    food=food,
-                    quantity=item['quantity'],
-                    unit_price=food.price
+                    food=cart_item.food,
+                    quantity=cart_item.quantity,
+                    unit_price=cart_item.food.price
                 )
-                order.total += order_item.unit_price * item['quantity']  # Include total price
 
-            order.total += data['delivery_fee']  # Add delivery fee
-            order.save()
+            # Now, we need to delete the cart once the order is created
+            cart.delete()
+
             return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
-
-        except Exception as e:
-            # Clean up the order if there's any exception
-            if 'order' in locals():  # If an order was created, delete it on error
-                order.delete()
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['get'], url_path='pending-order-of-my-store', detail=False)
     def get_order(self, request):
         try:
             my_store = request.user.store
         except Store.DoesNotExist:
-            return Response('Error: You do not have a store', status=status.HTTP_404_NOT_FOUND)
+            return Response('Lỗi: Bạn không có cửa hàng!', status=status.HTTP_404_NOT_FOUND)
         return Response(OrderSerializer(my_store.orders_for_store.filter(status='PENDING'), many=True).data,
                         status=status.HTTP_200_OK)
 
@@ -954,3 +958,117 @@ class ReviewViewSet(viewsets.ViewSet, generics.DestroyAPIView, generics.UpdateAP
     queryset = Review.objects.all()
     parser_classes = [parsers.MultiPartParser]
     serializer_class = ReviewSerializer
+
+class CartViewSet(viewsets.ViewSet):
+    """
+    A simple ViewSet for viewing and editing cart items.
+    """
+
+    def list(self, request):
+        # List the cart for the current user
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        serializer = CartSerializer(cart)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def add_to_cart(self, request, *args, **kwargs):
+        user = request.user
+        food_id = request.data.get('food_id')
+        quantity = request.data.get('quantity')
+
+        # If quantity is None or not provided, default to 1
+        if quantity is None:
+            quantity = 1
+        else:
+            try:
+                quantity = int(quantity)  # Ensure quantity is an integer
+                if quantity < 1:
+                    raise ValidationError("Quantity must be at least 1.")
+            except ValueError:
+                raise ValidationError("Invalid quantity value.")
+
+        # Get the food item that is being added to the cart
+        try:
+            food = Food.objects.get(id=food_id)
+        except Food.DoesNotExist:
+            raise ValidationError("Food item does not exist.")
+
+        now = datetime.now().time()
+
+        if food.start_time and food.end_time:
+            if not (food.start_time <= now <= food.end_time):
+                raise ValidationError(f"Food item {food.name} is not available at this time.")
+
+        if user.user_role == User.STORE and user.store:
+            if food.store == user.store:
+                raise ValidationError("You cannot add food from your own store to the cart.")
+
+        # Get the user's cart or create one if it doesn't exist
+        cart, created = Cart.objects.get_or_create(user=user, active=True)
+
+        # If the cart is not empty, check the store restriction
+        if cart.cart_items.exists():
+            first_food_item = cart.cart_items.first()  # Get the first item in the cart
+            first_food_store = first_food_item.food.store  # Get the store of the first item in the cart
+
+            # Check if the new food item is from a different store
+            if food.store != first_food_store:
+                raise ValidationError(f"Cannot add food from a different store. The first item in the cart is from {first_food_store.name}.")
+
+        # # Add the food item to the cart
+        # cart_item, created = CartItem.objects.get_or_create(
+        #     cart=cart,
+        #     food=food,
+        #     defaults={'quantity': 0}  # If the item doesn't exist, initialize the quantity to 0
+        # )
+        #
+        # # Update the quantity of the food item in the cart
+        # cart_item.quantity += int(request.data.get('quantity', 0))
+        # cart_item.save()
+        #
+        # # Return the updated cart
+        # serializer = CartSerializer(cart)
+        # return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # Kiểm tra xem món ăn đã có trong giỏ hàng chưa
+        cart_item, created = CartItem.objects.get_or_create(cart=cart, food=food)
+
+        if not created:  # Nếu món ăn đã có trong giỏ hàng, tăng số lượng lên
+            cart_item.quantity += quantity
+            cart_item.save()
+        else:  # Nếu món ăn chưa có, khởi tạo số lượng
+            cart_item.quantity = quantity
+            cart_item.save()
+
+        # Cập nhật tổng giá trị của giỏ hàng
+        cart.total = cart.total_price  # Cập nhật tổng tiền giỏ hàng
+        cart.save()
+
+        # Trả về giỏ hàng sau khi cập nhật
+        serializer = CartSerializer(cart)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def increase_quantity(self, request, pk=None):
+        # Increase the quantity of a cart item
+        cart_item = CartItem.objects.get(id=pk)
+        cart_item.quantity += 1
+        cart_item.save()
+        return Response({'message': 'Quantity increased.'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def decrease_quantity(self, request, pk=None):
+        # Decrease the quantity of a cart item
+        cart_item = CartItem.objects.get(id=pk)
+        if cart_item.quantity > 1:
+            cart_item.quantity -= 1
+            cart_item.save()
+            return Response({'message': 'Quantity decreased.'}, status=status.HTTP_200_OK)
+        return Response({'message': 'Cannot decrease quantity below 1.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['delete'])
+    def remove_item(self, request, pk=None):
+        # Remove a cart item
+        cart_item = CartItem.objects.get(id=pk)
+        cart_item.delete()
+        return Response({'message': 'Item removed from cart.'}, status=status.HTTP_204_NO_CONTENT)
