@@ -55,6 +55,19 @@ const apiEndpoints = {
   "cart-increase": (id) => "/Cart/${id}/increase_quantity/", //Cộng số lượng đồ ăn lên một (ID ở đây là id cartitem) 'POST'
   "cart-decrease": (id) => "/Cart/${id}/decrease_quantity/", //Giảm số lượng đồ ăn lên một (ID ở đây là id cartitem) 'POST'
   "cart-foodremove": (id) => "/Cart/${id}/remove_item/", //Bỏ đồ ăn khỏi giỏ hàng 'DELETE'
+
+  //API đơn hàng
+  "order-create": "/Order/", //Tạo ra đơn hàng lấy từ giỏ hàng ra 'POST'
+  "order-pending": "/Order/pending-order-of-my-store/", //Lấy danh sách đơn hàng trong trạng thái chờ từ một cửa hàng 'GET'
+  "order-detail": (id) => "/Order/${id}/", //Lấy chi tiết một đơn hàng 'GET'
+  "order-cancel": (id) => "/Order/${id}/cancel-order/", //Hủy đơn hàng đối với người dùng || Từ chối đối với chủ cửa hàng 'DELETE'
+  "order-confirm" : (id) => "/Order/${id}/confirm-order/", //Chấp nhận đơn hàng 'PATCH'
+  "order-confirmC" : (id) => "/Order/{id}/confirm-receipt/", //Xác nhận hoàn thành đơn hàng từ khách hàng 'PATCH'
+
+  //API doanh thu
+  "revenue": "/Revenue/", //Xem doanh thu các năm của cửa hàng 'GET'
+  "revenue-monthly": "/Revenue/monthly_revenue/", //Xem doanh thu 12 tháng của một năm cụ thể (Có query một năm cụ thể) 'GET'
+  "revenue-quarterly": "/Revenue/quarterly_revenue/", //Xem doanh thu các quý của một năm cụ thể (Có query một năm cụ thể) 'GET'
 };
 
 const axiosInstance = axios.create({

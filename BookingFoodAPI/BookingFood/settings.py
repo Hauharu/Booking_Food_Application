@@ -99,7 +99,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # *** Cài đặt ngôn ngữ và múi giờ ***
 LANGUAGE_CODE = 'en-us'  # Ngôn ngữ mặc định
-TIME_ZONE = 'Asia/Ho_Chi_Minh'  # Múi giờ Việt Nam
+TIME_ZONE = 'UTC'  # Múi giờ Việt Nam
 USE_I18N = True  # Hỗ trợ quốc tế hóa
 USE_TZ = True  # Sử dụng múi giờ
 
@@ -112,7 +112,7 @@ ACCOUNT_UNIQUE_EMAIL = True
 # *** Cài đặt mặc định ***
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# # Cấu hình OAuth2
+# Cấu hình OAuth2
 OAUTH2_PROVIDER = {'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore'}
 
 # *** Tích hợp Cloudinary ***

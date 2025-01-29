@@ -1,4 +1,5 @@
 import calendar
+import json
 from datetime import datetime
 from collections import defaultdict
 from .models import Menu, Food, Store, User, Comment, Order, OrderDetail, UserFollowedStore, Address, Category, Review
@@ -11,6 +12,7 @@ from django.contrib import admin
 from django import forms
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.utils.safestring import mark_safe
+from django.utils.timezone import now
 
 
 # Lớp AdminSite tùy chỉnh để quản lý giao diện quản trị
@@ -19,6 +21,75 @@ class BookingFoodAdminSite(admin.AdminSite):
     site_title = "BookingFood Admin"
     index_title = "Chào mừng đến với trang quản trị"
 
+
+    # # Định nghĩa các URL tùy chỉnh cho admin
+    # def get_urls(self):
+    #     urls = super().get_urls()
+    #     custom_urls = [
+    #         path('stats/', self.stats_view),  # Thêm một view tùy chỉnh để hiển thị thống kê
+    #     ]
+    #     return custom_urls + urls
+    #
+    # # View để hiển thị thống kê về các đơn hàng của cửa hàng
+    # def stats_view(self, request):
+    #     current_year = datetime.now().year  # Lấy năm hiện tại
+    #     user_store = Store.objects.filter(user=request.user).first()  # Lấy cửa hàng của người dùng đang đăng nhập
+    #
+    #     # Lấy tất cả các đơn hàng của cửa hàng
+    #     all_orders = Order.objects.filter(store=user_store)
+    #
+    #     # Tính toán dữ liệu cho biểu đồ hàng tháng
+    #     monthly_data = [0] * 12
+    #     for order in all_orders:
+    #         month = order.order_date.month - 1
+    #         year = order.order_date.year
+    #         if year == current_year:
+    #             monthly_data[month] += order.total
+    #
+    #     monthly_labels = [calendar.month_name[i] for i in range(1, 13)]  # Lấy tên tháng
+    #
+    #     # Tính toán dữ liệu cho biểu đồ hàng quý
+    #     quarterly_data = [0] * 4
+    #     for order in all_orders:
+    #         quarter = (order.order_date.month - 1) // 3  # Xác định quý của đơn hàng
+    #         year = order.order_date.year
+    #         if year == current_year:
+    #             quarterly_data[quarter] += order.total
+    #
+    #     quarterly_labels = [f'Quý {i}' for i in range(1, 5)]  # Tạo nhãn cho các quý
+    #
+    #     # Tính toán doanh thu hàng năm cho biểu đồ
+    #     yearly_revenue = defaultdict(int)
+    #     for order in all_orders:
+    #         year = order.order_date.year
+    #         yearly_revenue[year] += order.total
+    #
+    #     yearly_labels = sorted(yearly_revenue.keys())  # Sắp xếp các năm
+    #     yearly_data = [yearly_revenue[year] for year in yearly_labels]  # Lấy doanh thu cho từng năm
+    #
+    #     # Lấy tổng số nhà hàng và người dùng
+    #     total_store = dao.count_store()
+    #     total_user = dao.count_user()
+    #
+    #     # Thống kê món ăn của nhà hàng
+    #     stats = Store.objects \
+    #         .annotate(food_count=Count('food')) \
+    #         .values('id', 'name', 'food_count')
+    #
+    #     # Chuẩn bị dữ liệu gửi vào template để hiển thị
+    #     context = {
+    #         'total_user': total_user,
+    #         'total_store': total_store,
+    #         'store_stats': stats,
+    #         'monthly_labels': monthly_labels,
+    #         'monthly_data': monthly_data,
+    #         'quarterly_labels': quarterly_labels,
+    #         'quarterly_data': quarterly_data,
+    #         'yearly_labels': yearly_labels,
+    #         'yearly_data': yearly_data,
+    #         'current_year': current_year,
+    #     }
+    #     return TemplateResponse(request, 'admin/stats.html', context)
     # Định nghĩa các URL tùy chỉnh cho admin
     def get_urls(self):
         urls = super().get_urls()
@@ -30,26 +101,31 @@ class BookingFoodAdminSite(admin.AdminSite):
     # View để hiển thị thống kê về các đơn hàng của cửa hàng
     def stats_view(self, request):
         current_year = datetime.now().year  # Lấy năm hiện tại
-        user_store = Store.objects.filter(user=request.user).first()  # Lấy cửa hàng của người dùng đang đăng nhập
+        # user_store = Store.objects.filter(user=request.user).first()  # Lấy cửa hàng của người dùng đang đăng nhập
 
         # Lấy tất cả các đơn hàng của cửa hàng
-        all_orders = Order.objects.filter(store=user_store)
+        all_orders = Order.objects.all()
 
-        # Tính toán dữ liệu cho biểu đồ hàng tháng
+        print(f"Orders count: {all_orders.count()}")  # Confirm orders exist
+        print(f"Current Year: {current_year}")
+
         monthly_data = [0] * 12
         for order in all_orders:
-            month = order.order_date.month - 1
-            year = order.order_date.year
+            print(f"Processing Order ID: {order.id}, Date: {order.created_date}, Total: {order.total}")
+            month = order.created_date.month - 1
+            year = order.created_date.year
             if year == current_year:
-                monthly_data[month] += order.total
+                monthly_data[month] += order.total  # This might be failing
+
+        print(f"Monthly Data: {monthly_data}")  # Check final data
 
         monthly_labels = [calendar.month_name[i] for i in range(1, 13)]  # Lấy tên tháng
 
         # Tính toán dữ liệu cho biểu đồ hàng quý
         quarterly_data = [0] * 4
         for order in all_orders:
-            quarter = (order.order_date.month - 1) // 3  # Xác định quý của đơn hàng
-            year = order.order_date.year
+            quarter = (order.created_date.month - 1) // 3  # Xác định quý của đơn hàng
+            year = order.created_date.year
             if year == current_year:
                 quarterly_data[quarter] += order.total
 
@@ -58,7 +134,7 @@ class BookingFoodAdminSite(admin.AdminSite):
         # Tính toán doanh thu hàng năm cho biểu đồ
         yearly_revenue = defaultdict(int)
         for order in all_orders:
-            year = order.order_date.year
+            year = order.created_date.year
             yearly_revenue[year] += order.total
 
         yearly_labels = sorted(yearly_revenue.keys())  # Sắp xếp các năm
@@ -73,7 +149,10 @@ class BookingFoodAdminSite(admin.AdminSite):
             .annotate(food_count=Count('food')) \
             .values('id', 'name', 'food_count')
 
-        # Chuẩn bị dữ liệu gửi vào template để hiển thị
+        monthly_data = [float(value) for value in monthly_data]
+        quarterly_data = [float(value) for value in quarterly_data]
+        yearly_data = [float(value) for value in yearly_data]
+
         context = {
             'total_user': total_user,
             'total_store': total_store,
@@ -86,6 +165,9 @@ class BookingFoodAdminSite(admin.AdminSite):
             'yearly_data': yearly_data,
             'current_year': current_year,
         }
+
+        # Debug: Print JSON before returning response
+        print(json.dumps(context, indent=4, default=str))
         return TemplateResponse(request, 'admin/stats.html', context)
 
 
@@ -203,10 +285,14 @@ class OrderDetailInline(admin.TabularInline):
 
 # Cấu hình cho mô hình Order
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['user', 'total', 'delivery_fee', 'payment_status', 'order_status']  # Các cột hiển thị
-    list_filter = ['order_status', 'payment_status', 'user']
-    search_fields = ['user__username', 'user__email']
+    list_display = ['user', 'total', 'delivery_fee', 'payment_status', 'order_status', 'store', 'created_date']  # Các cột hiển thị
+    list_filter = ['order_status', 'payment_status', 'user', 'store']
+    search_fields = ['user__username', 'user__email', 'store']
     inlines = [OrderDetailInline]
+
+    class Meta:
+        model = Order
+        fields = '__all__'
 
     def get_order_details(self, obj):
         # Hiển thị chi tiết đơn hàng dưới dạng chuỗi

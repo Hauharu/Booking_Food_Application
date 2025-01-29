@@ -226,3 +226,15 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = ['id', 'message', 'user', 'created_date']
+
+class YearlyRevenueSerializer(serializers.Serializer):
+    year = serializers.IntegerField()
+    revenue = serializers.DecimalField(max_digits=12, decimal_places=2)
+
+class MonthlyRevenueSerializer(serializers.Serializer):
+    month = serializers.IntegerField()
+    revenue = serializers.DecimalField(max_digits=12, decimal_places=2)
+
+class QuarterlyRevenueSerializer(serializers.Serializer):
+    quarter = serializers.IntegerField()
+    revenue = serializers.DecimalField(max_digits=12, decimal_places=2)

@@ -1,5 +1,6 @@
 from cloudinary.cache.responsive_breakpoints_cache import instance
-from django.shortcuts import render
+from django.db.models.functions import TruncQuarter, ExtractMonth, ExtractYear, TruncYear, ExtractQuarter
+from django.forms import DecimalField
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.utils.dateparse import parse_time
@@ -7,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from datetime import time, datetime
 from pytz import timezone
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
 
 from . import paginators, utils
 from rest_framework import viewsets, permissions, generics, parsers, status
@@ -17,11 +19,12 @@ from .models import *
 from .perms import *
 from .serializers import (UserSerializer, StoreSerializer, MenuSerializer, CategorySerializer,
                           CommentSerializer, FoodInCategorySerializer, OrderSerializer, FoodSerializer,
-                          AddressSerializer, ReviewSerializer, UserFollowedStoreSerializer, CartSerializer)
+                          AddressSerializer, ReviewSerializer, UserFollowedStoreSerializer, CartSerializer,
+                          YearlyRevenueSerializer, MonthlyRevenueSerializer, QuarterlyRevenueSerializer)
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.db.models import Q, Count
+from django.db.models import Q, Count, FloatField
 from .models import Food
 from .serializers import FoodSerializer
 
@@ -85,7 +88,7 @@ class FoodSearchView(APIView):
         if store:
             foods = foods.filter(store_id=store)
 
-        #Lọc trong khoảng giá xác định
+        # Lọc trong khoảng giá xác định
         if min_price:
             foods = foods.filter(price__gte=min_price)
 
@@ -336,6 +339,7 @@ class UserViewSet(viewsets.ViewSet):
             'comments': comment_data
         }, status=status.HTTP_200_OK)
 
+
 # Viewset danh mục
 class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Category.objects.all()
@@ -570,6 +574,7 @@ class FoodViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.DestroyAPIV
     #     )
     #
 
+
 # Viewset Menu
 class MenuViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.DestroyAPIView, generics.RetrieveAPIView):
     serializer_class = MenuSerializer
@@ -702,65 +707,64 @@ class MenuViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.DestroyAPIV
 
     @action(detail=True, methods=['patch'], url_path='add-foods')
     def manage_foods(self, request, pk=None):
-            """
-            Handle adding selected foods to the menu.
-            """
-            menu = self.get_object()
-            user = request.user
+        """
+        Handle adding selected foods to the menu.
+        """
+        menu = self.get_object()
+        user = request.user
 
-            # Ensure the logged-in user owns the menu
-            if menu.store.owner != user:
-                return Response({"error": "You are not allowed to modify this menu."}, status=status.HTTP_403_FORBIDDEN)
+        # Ensure the logged-in user owns the menu
+        if menu.store.owner != user:
+            return Response({"error": "You are not allowed to modify this menu."}, status=status.HTTP_403_FORBIDDEN)
 
-            # Add selected foods to the menu
-            food_ids = request.data.get('food_ids', [])
-            if not isinstance(food_ids, list) or not food_ids:
-                return Response({"error": "Invalid or missing 'food_ids'."}, status=status.HTTP_400_BAD_REQUEST)
+        # Add selected foods to the menu
+        food_ids = request.data.get('food_ids', [])
+        if not isinstance(food_ids, list) or not food_ids:
+            return Response({"error": "Invalid or missing 'food_ids'."}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Validate each food and add it to the menu
-            foods = Food.objects.filter(id__in=food_ids, store=menu.store)
-            if foods.count() != len(food_ids):
-                return Response({"error": "Some foods are invalid or do not belong to your store."},
-                                status=status.HTTP_400_BAD_REQUEST)
+        # Validate each food and add it to the menu
+        foods = Food.objects.filter(id__in=food_ids, store=menu.store)
+        if foods.count() != len(food_ids):
+            return Response({"error": "Some foods are invalid or do not belong to your store."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
-            menu.foods.add(*foods)
+        menu.foods.add(*foods)
 
-            return Response({"message": "Foods successfully added to the menu."}, status=status.HTTP_200_OK)
-
+        return Response({"message": "Foods successfully added to the menu."}, status=status.HTTP_200_OK)
 
     @action(methods=['patch'], url_path='remove-foods', detail=True)
     def remove_foods_from_menu(self, request, pk=None):
-            try:
-                menu = Menu.objects.get(id=pk)
-                user = request.user
+        try:
+            menu = Menu.objects.get(id=pk)
+            user = request.user
 
-                # Ensure the logged-in user owns the menu
-                if user != menu.store.user:
-                    return Response({"error": "Bạn không có quyền xóa món ăn khỏi menu này!"},
-                                    status=status.HTTP_403_FORBIDDEN)
+            # Ensure the logged-in user owns the menu
+            if user != menu.store.user:
+                return Response({"error": "Bạn không có quyền xóa món ăn khỏi menu này!"},
+                                status=status.HTTP_403_FORBIDDEN)
 
-                # Get the list of food IDs to remove from the menu
-                food_ids = request.data.get('food_ids', [])
-                if not isinstance(food_ids, list) or not food_ids:
-                    return Response({"error": "Missing or invalid 'food_ids'."}, status=status.HTTP_400_BAD_REQUEST)
+            # Get the list of food IDs to remove from the menu
+            food_ids = request.data.get('food_ids', [])
+            if not isinstance(food_ids, list) or not food_ids:
+                return Response({"error": "Missing or invalid 'food_ids'."}, status=status.HTTP_400_BAD_REQUEST)
 
-                # Validate and remove foods from the menu
-                foods = Food.objects.filter(id__in=food_ids, menu=menu, store=user.store)
+            # Validate and remove foods from the menu
+            foods = Food.objects.filter(id__in=food_ids, menu=menu, store=user.store)
 
-                if foods.count() != len(food_ids):
-                    return Response({"error": "Some foods are invalid or do not belong to your store or menu."},
-                                    status=status.HTTP_400_BAD_REQUEST)
+            if foods.count() != len(food_ids):
+                return Response({"error": "Some foods are invalid or do not belong to your store or menu."},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-                # Remove each food from the menu
-                foods.update(menu=None)  # This sets the menu field of each food to None
+            # Remove each food from the menu
+            foods.update(menu=None)  # This sets the menu field of each food to None
 
-                # Return a successful response with the removed food details
-                removed_foods = FoodSerializer(foods, many=True).data
-                return Response({"message": "Món ăn đã được xóa khỏi menu thành công!", "removed_foods": removed_foods},
-                                status=status.HTTP_200_OK)
+            # Return a successful response with the removed food details
+            removed_foods = FoodSerializer(foods, many=True).data
+            return Response({"message": "Món ăn đã được xóa khỏi menu thành công!", "removed_foods": removed_foods},
+                            status=status.HTTP_200_OK)
 
-            except Menu.DoesNotExist:
-                return Response({"error": "Không tìm thấy menu!"}, status=status.HTTP_404_NOT_FOUND)
+        except Menu.DoesNotExist:
+            return Response({"error": "Không tìm thấy menu!"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class OrderViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAPIView):
@@ -843,7 +847,7 @@ class OrderViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAP
         return Response(OrderSerializer(my_store.orders_for_store.filter(status='PENDING'), many=True).data,
                         status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'], url_path='confirm-order')
+    @action(detail=True, methods=['patch'], url_path='confirm-order')
     def confirm_order(self, request, pk):
         order = self.get_object()
         try:
@@ -853,36 +857,37 @@ class OrderViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAP
         if order.store != my_store:
             return Response(f'Error: This order with id {order.id} does not belong to your store',
                             status=status.HTTP_404_NOT_FOUND)
-        if order.status != 'PENDING':
+        if order.order_status != Order.PENDING:
             return Response('Error: Only orders with "PENDING" status can be confirmed',
                             status=status.HTTP_400_BAD_REQUEST)
-        order.status = 'DELIVERING'
+        order.order_status = Order.ACCEPTED  # Assuming ACCEPTED means it's now delivering
         order.save()
         return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['delete'], url_path='cancel-order')
     def cancel_order(self, request, pk):
         order = self.get_object()
-        if order.status != 'PENDING':
+        if order.order_status != Order.PENDING:
             return Response('Error: Only orders with "PENDING" status can be cancelled',
                             status=status.HTTP_400_BAD_REQUEST)
         if utils.is_user_order_owner(order=order, user=request.user) is True:
             order.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         if utils.is_store_order_owner(order=order, store=request.user.store) is True:
-            order.status = 'CANCELLED'
+            order.order_status = Order.CANCELLED
             order.save()
             return Response({'status': 'Order cancelled'}, status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['post'], url_path='confirm-receipt')
+    @action(detail=True, methods=['patch'], url_path='confirm-receipt')
     def complete_order(self, request, pk):
         order = self.get_object()
         if utils.is_user_order_owner(order=order, user=request.user) is False:
             return Response(f'Error: This order with id {order.id} does not belong to you',
                             status=status.HTTP_403_FORBIDDEN)
-        if order.status != 'DELIVERING':
-            return Response('Error: Store has not confirmed delivery', status=status.HTTP_400_BAD_REQUEST)
-        order.status = 'DELIVERED'
+        if order.order_status != Order.ACCEPTED:  # Adjust based on correct status
+            return Response('Error: Store has not confirmed delivery',
+                            status=status.HTTP_400_BAD_REQUEST)
+        order.order_status = Order.SUCCESS
         order.save()
         return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
 
@@ -959,6 +964,7 @@ class ReviewViewSet(viewsets.ViewSet, generics.DestroyAPIView, generics.UpdateAP
     parser_classes = [parsers.MultiPartParser]
     serializer_class = ReviewSerializer
 
+
 class CartViewSet(viewsets.ViewSet):
     """
     A simple ViewSet for viewing and editing cart items.
@@ -1013,7 +1019,8 @@ class CartViewSet(viewsets.ViewSet):
 
             # Check if the new food item is from a different store
             if food.store != first_food_store:
-                raise ValidationError(f"Cannot add food from a different store. The first item in the cart is from {first_food_store.name}.")
+                raise ValidationError(
+                    f"Cannot add food from a different store. The first item in the cart is from {first_food_store.name}.")
 
         # # Add the food item to the cart
         # cart_item, created = CartItem.objects.get_or_create(
@@ -1072,3 +1079,65 @@ class CartViewSet(viewsets.ViewSet):
         cart_item = CartItem.objects.get(id=pk)
         cart_item.delete()
         return Response({'message': 'Item removed from cart.'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class RevenueViewSet(viewsets.ViewSet):
+    permission_classes = [IsOrderOwner]
+
+    def list(self, request):
+        user = request.user
+        store = Store.objects.filter(user=user).first()
+
+        if not store:
+            return Response({'error': 'User does not have an associated store.'}, status=400)
+
+        orders = Order.objects.filter(store=store, order_status=Order.SUCCESS)
+        yearly_revenue = orders.annotate(year=ExtractYear('created_date')) \
+            .values('year') \
+            .annotate(revenue=Sum('total')) \
+            .order_by('-year')
+
+        serializer = YearlyRevenueSerializer(yearly_revenue, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def monthly_revenue(self, request):
+        year = request.query_params.get('year')
+        if not year:
+            return Response({'error': 'Year parameter is required.'}, status=400)
+
+        user = request.user
+        store = Store.objects.filter(user=user).first()
+
+        if not store:
+            return Response({'error': 'User does not have an associated store.'}, status=400)
+
+        orders = Order.objects.filter(store=store, order_status=Order.SUCCESS, created_date__year=year)
+        monthly_revenue = orders.annotate(month=ExtractMonth('created_date')) \
+            .values('month') \
+            .annotate(revenue=Sum('total')) \
+            .order_by('month')
+
+        serializer = MonthlyRevenueSerializer(monthly_revenue, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def quarterly_revenue(self, request):
+        year = request.query_params.get('year')
+        if not year:
+            return Response({'error': 'Year parameter is required.'}, status=400)
+
+        user = request.user
+        store = Store.objects.filter(user=user).first()
+
+        if not store:
+            return Response({'error': 'User does not have an associated store.'}, status=400)
+
+        orders = Order.objects.filter(store=store, order_status=Order.SUCCESS, created_date__year=year)
+        quarterly_revenue = orders.annotate(quarter=ExtractQuarter('created_date')) \
+            .values('quarter') \
+            .annotate(revenue=Sum('total')) \
+            .order_by('quarter')
+
+        serializer = QuarterlyRevenueSerializer(quarterly_revenue, many=True)
+        return Response(serializer.data)

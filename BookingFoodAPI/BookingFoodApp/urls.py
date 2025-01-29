@@ -15,6 +15,7 @@ router.register('Order', views.OrderViewSet, basename='Order')
 router.register('FoodM', views.FoodViewSet, basename='FoodM')
 router.register('FoodP', views.PublicFoodViewSet, basename='FoodP')
 router.register('Cart', views.CartViewSet, basename='Cart')
+router.register('Revenue', views.RevenueViewSet, basename='Revenue')
 
 urlpatterns = [
     path('', include(router.urls)),
