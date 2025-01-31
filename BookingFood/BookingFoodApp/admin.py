@@ -196,8 +196,10 @@ class UserAdmin(admin.ModelAdmin):
         # Hiển thị ảnh đại diện của người dùng dưới dạng hình ảnh trong admin panel
         if user.avatar:
             return mark_safe(
-                "<img src='{cloud_path}{image_name}' width='50' height='50' />".format(cloud_path=cloud_path,
-                                                                                       image_name=user.avatar))
+                # "<img src='{cloud_path}{image_name}' width='50' height='50' />".format(cloud_path=cloud_path,
+                #                                                                        image_name=user.avatar)
+                f"<img src='/static/{user.avatar}' width='50' height='50' />"
+            )
 
 
 # Form để tùy chỉnh mô hình Store trong giao diện quản trị
@@ -219,9 +221,10 @@ class StoreAdmin(admin.ModelAdmin):
         # Hiển thị ảnh đại diện của cửa hàng dưới dạng hình ảnh trong admin panel
         if store.image:
             return mark_safe(
-                "<img src='{cloud_path}{image_name}' width='50' height='50' />".format(cloud_path=cloud_path,
-                                                                                       image_name=store.image))
-
+                # "<img src='{cloud_path}{image_name}' width='50' height='50' />".format(cloud_path=cloud_path,
+                #                                                                        image_name=store.image))
+                f"<img src='/static/{store.image}' width='50' height='50' />"
+            )
     def save_model(self, request, obj, form, change):
         if change:
             original_obj = self.model.objects.get(id=obj.id)
@@ -261,8 +264,10 @@ class FoodAdmin(admin.ModelAdmin):
         # Hiển thị hình ảnh món ăn trong admin panel
         if food:
             return mark_safe(
-                "<img src='{cloud_path}{image_name}' width='50' height='50' />".format(cloud_path=cloud_path,
-                                                                                       image_name=food.image))
+                # "<img src='{cloud_path}{image_name}' width='50' height='50' />".format(cloud_path=cloud_path,
+                #                                                                        image_name=food.image)
+                f"<img src='/static/{food.image}' width='50' height='50' />"
+            )
 
     def get_categories(self, obj):
         # Lấy các thể loại của món ăn và hiển thị dưới dạng chuỗi

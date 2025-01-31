@@ -84,7 +84,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',  # Sử dụng MySQL làm cơ sở dữ liệu
         'NAME': 'bookingfood_db',  # Tên cơ sở dữ liệu
         'USER': 'root',  # Tên đăng nhập
-        'PASSWORD': '12345678@',  # Mật khẩu
+        'PASSWORD': 'Quang0913906329',  # Mật khẩu
         'HOST': '',  # Mặc định là localhost
     }
 }

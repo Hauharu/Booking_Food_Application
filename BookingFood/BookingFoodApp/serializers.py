@@ -53,7 +53,7 @@ class StoreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Store  # Gắn serializer với model Store
-        fields = ['id', 'name', 'active', 'description', 'image', 'address_line',
+        fields = ['id', 'name', 'rating', 'active', 'description', 'image', 'address_line',
                   'follower_number', 'user']
 
     # Serializer quản lý địa chỉ giao hàng

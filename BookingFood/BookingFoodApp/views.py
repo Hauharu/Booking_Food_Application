@@ -106,7 +106,7 @@ class FoodSearchView(APIView):
 
 # Viewset cửa hàng
 class StoreViewSet(viewsets.ModelViewSet):
-    queryset = Store.objects.all()
+    queryset = Store.objects.all().order_by('id')
     serializer_class = StoreSerializer
     parser_classes = [parsers.MultiPartParser, ]
 

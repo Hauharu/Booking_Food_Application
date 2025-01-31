@@ -23,7 +23,7 @@ class BaseModel(models.Model):
 
 # User: Lớp mô tả thông tin người dùng với các vai trò.
 class User(AbstractUser):
-    avatar = CloudinaryField('avatar', default='', null=True)
+    avatar = models.ImageField(upload_to='avatar/%Y/%m/')
     phone = models.CharField(max_length=10, null=False, unique=True, default=False)
     is_verified = models.BooleanField(default=False)
     USER, STORE = range(2)
@@ -55,7 +55,7 @@ class Address(models.Model):
 class Store(models.Model):
     name = models.CharField(max_length=255, null=False, unique=True)
     description = RichTextField(null=True, blank=True)
-    image = CloudinaryField('image', default='', null=True, blank=True)
+    image = models.ImageField(upload_to='stores/%Y/%m/')
     address_line = models.CharField(max_length=255, default='Ho Chi Minh City', blank=False)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
@@ -130,7 +130,7 @@ class Food(BaseModel):
     ]
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='out_of_stock')
     average_rating = models.DecimalField(max_digits=2, decimal_places=1, blank=True, null=True)
-    image = CloudinaryField('image', default='', null=True)
+    image = models.ImageField(upload_to='foods/%Y/%m/')
     store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='food', blank=False)
     menu = models.ForeignKey(Menu, on_delete=models.PROTECT, related_name='food', null=True,blank=True)
     categories = models.ManyToManyField('Category', related_name='food',blank=True)
@@ -250,17 +250,6 @@ class OrderDetail(models.Model):
     food = models.ForeignKey(Food, on_delete=models.RESTRICT)
 
 
-# PaymentForm: Form thanh toán.
-class PaymentForm(forms.Form):
-    order_id = forms.CharField(max_length=250)
-    order_type = forms.CharField(max_length=20)
-    amount = forms.IntegerField()
-    order_desc = forms.CharField(max_length=100)
-    bank_code = forms.CharField(max_length=20, required=False)
-    language = forms.CharField(max_length=2)
-    userId = forms.IntegerField()
-    cartItemIds = forms.CharField(widget=forms.HiddenInput(), required=False)
-
 
 # Payment_VNPay: Thông tin thanh toán qua VNPay.
 class PaymentVNPay(models.Model):
@@ -274,13 +263,6 @@ class PaymentVNPay(models.Model):
     menu = models.ManyToManyField(Menu, through='PaymentVNPayDetail', related_name='hoadon_vnpay_menu')
     cartItemIds = models.CharField(max_length=200, null=True, blank=True)
     payment_date = models.DateTimeField(null=True, blank=True)
-
-
-# Payment_VNPayDetail: Chi tiết thanh toán VNPay.
-class PaymentVNPayDetail(models.Model):
-    payment_vnpay = models.ForeignKey(PaymentVNPay, on_delete=models.CASCADE)
-    food = models.ForeignKey(Food, on_delete=models.CASCADE, null=True, blank=True)
-    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, null=True, blank=True)
 
 
 # ActionBase: Lớp hành động cơ bản (like, comment, rate).
@@ -373,14 +355,6 @@ def update_average_rating_on_delete(sender, instance, **kwargs):
 
     food.average_rating = total_rating / count if count > 0 else 0
     food.save()
-
-
-
-# Notification: Thông báo cho người dùng.
-class Notification(models.Model):
-    message = models.TextField(null=False)
-    created_date = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'user_role': User.STORE})
 
 
 # ChatMessage: Tin nhắn chat giữa người dùng.
