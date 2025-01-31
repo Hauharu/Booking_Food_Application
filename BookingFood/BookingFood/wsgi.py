@@ -1,5 +1,5 @@
 """
-WSGI config for BookingFoodAPI project.
+WSGI config for BookingFood project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
