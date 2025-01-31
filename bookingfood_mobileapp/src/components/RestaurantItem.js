@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import { Colors, Text, View, Badge, Card, TouchableOpacity, Image } from 'react-native-ui-lib';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
+
 const baseURL = 'https://trunghau.pythonanywhere.com';
 
 const fetchStores = async () => {
