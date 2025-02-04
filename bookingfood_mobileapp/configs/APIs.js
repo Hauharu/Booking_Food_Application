@@ -14,6 +14,7 @@ export const endpoints = {
   'store': '/Store/',   //Lấy danh sách cửa hàng và chức năng tạo cửa hàng 'GET + POST'
 
   //API cửa hàng
+  createRestaurant: '/Store/',
   'current-store': (id) => '/Store/${id}/',   //Thông tin và các chức năng liên quan đến cửa hàng 'GET + POST + PATCH + DELETE'
   'current-store-comment': (id) => '/Store/${id}/comment/', //Bình luận cửa hàng 'GET + POST'
   'current-store-follow': (id) => '/Store/${id}/follow/', //Chức năng để theo dõi cửa hàng 'POST'

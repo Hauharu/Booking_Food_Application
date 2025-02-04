@@ -9,6 +9,7 @@ import Default from './components/DefaultApp/Default';
 import { MyDispatchContext, MyUserContext } from './configs/UserContexts';
 import MyUserReducer from './configs/UserReducers';
 import Register from './components/User/Register';
+import RestaurantRegister from './components/User/RestaurantRegister';
 import UserProfile from './components/User/UserProfile';
 import ProductDetails from './components/Home/ProductDetails';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -32,7 +33,7 @@ export default function App() {
   useEffect(() => {
     const appStateListener = AppState.addEventListener("change", async (nextAppState) => {
       if (nextAppState === "inactive" || nextAppState === "background") {
-        console.log("Ứng dụng vào nền, nhưng không xóa user_id");
+        console.log("Ứng dụng đang vào");
       } else if (nextAppState === "active") {
         console.log("Ứng dụng đang hoạt động");
       }
@@ -55,6 +56,7 @@ export default function App() {
               <Stack.Screen name="ProductDetails" component={ProductDetails} />
               <Stack.Screen name="Register" component={Register} />
               <Stack.Screen name="UserProfile" component={UserProfile} />
+              <Stack.Screen name="RestaurantRegister" component={RestaurantRegister} />
               <Stack.Screen name="ShoppingCart" component={ShoppingCart}/>
               <Stack.Screen name="Bill" component={Bill}/>
               <Stack.Screen name="ProductComparison" component={ProductComparison}/>

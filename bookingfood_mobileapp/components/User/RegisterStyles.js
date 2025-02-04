@@ -4,33 +4,27 @@ const RegisterStyles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#F9FAFB", // Nền nhẹ
   },
   RegisterInput: {
-    marginBottom: 10,
-    backgroundColor: "#fff",
+    marginBottom: 12,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 8,
   },
   RegisterButton: {
-    backgroundColor: "#EE4D2D",
-    paddingVertical: 12,
+    backgroundColor: "#FF3B3F", // Màu đỏ cam nổi bật
+    paddingVertical: 14,
     alignItems: "center",
     borderRadius: 8,
-    marginTop: 10,
+    marginTop: 12,
   },
-  ChooseImageButton: {
-    backgroundColor: "#FF5722",
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  ChooseImageText: {
-    color: "#fff",
-    fontSize: 14,
-  },
-  AvatarPreview: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+  logoutText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 

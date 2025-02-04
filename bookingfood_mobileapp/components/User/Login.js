@@ -7,7 +7,6 @@ import APIs, { authApis, endpoints } from "../../configs/APIs";
 import QueryString from "qs";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MyDispatchContext } from "../../configs/UserContexts";
-// import { Icon, Skeleton } from "@rneui/themed";
 
 const LoginScreen = () => {
     const nav = useNavigation();
@@ -17,6 +16,8 @@ const LoginScreen = () => {
         'username': '',
         'password': ''
     });
+
+    const [showPassword, setShowPassword] = useState(false);
 
     const users = {
         'username': {
@@ -67,28 +68,39 @@ const LoginScreen = () => {
     };
 
     return (
+        
         <View style={{
             flex: 1,
-            backgroundColor: "#f5f5f5",
+            // backgroundColor: "#f5f5f5",
             justifyContent: "center",
             alignItems: 'center',
             padding: 20,
             position: 'relative'
         }}>
-          
-            {
-                Object.values(users).map(u => 
-                    <TextInput
-                        key={u.field}
-                        secureTextEntry={u.secure}
-                        mode="outlined"
-                        style={styles.loginInput}
-                        placeholder={u.title}
-                        value={user[u.field]}
-                        onChangeText={t => updateUser(t, u.field)}
+            <TextInput
+                key={'username'}
+                mode="outlined"
+                style={styles.loginInput}
+                placeholder={'Nhập tên đăng nhập'}
+                value={user['username']}
+                onChangeText={t => updateUser(t, 'username')}
+            />
+
+            <TextInput
+                key={'password'}
+                secureTextEntry={!showPassword}
+                mode="outlined"
+                style={styles.loginInput}
+                placeholder={'Nhập mật khẩu'}
+                value={user['password']}
+                onChangeText={t => updateUser(t, 'password')}
+                right={
+                    <TextInput.Icon
+                        name={showPassword ? "eye-off" : "eye"}
+                        onPress={() => setShowPassword(!showPassword)}
                     />
-                )
-            }
+                }
+            />
 
             <TouchableOpacity onPress={login} loading={loading} style={styles.loginButton}>
                 {loading && <ActivityIndicator style={{ marginRight: 10 }} color="#fff" />}
@@ -97,7 +109,7 @@ const LoginScreen = () => {
 
             <View style={{
                 flexDirection: 'row',
-                marginTop: 20,  // Added space between login buttons and other elements
+                marginTop: 20,
                 justifyContent: 'center',
             }}>
                 <TouchableOpacity
@@ -117,7 +129,6 @@ const LoginScreen = () => {
                         <Text style={styles.register}>Đăng ký</Text>
                     </TouchableOpacity>
                 </View>
-                
             </View>
         </View>
     );
