@@ -6,7 +6,7 @@ import { useContext, useState } from "react";
 import APIs, { endpoints } from "../../configs/APIs";
 import { MyDispatchContext } from "../../configs/UserContexts";
 
-const RegisterScreen = () => {
+const Register = () => {
     const nav = useNavigation();
     const [loading, setLoading] = useState(false);
     const dispatch = useContext(MyDispatchContext);
@@ -61,12 +61,12 @@ const RegisterScreen = () => {
             console.log("🔹 FormData chuẩn bị gửi:", form);
 
             const res = await APIs.post(endpoints['register'], form, {
-                headers: { "Content-Type": "multipart/form-data" 
+                headers: { "Content-Type": "multipart/form-data" }
+            });
 
-                }
-            })
-
-            nav.navigate('Login');
+            Alert.alert("Thành công", "Đăng ký thành công!", [
+                { text: "OK", onPress: () => nav.replace("Login") }
+            ]);
         } 
         catch (error) {
             console.error("❌ Lỗi:", error.response?.data || error.response?.status || error.message);
@@ -111,4 +111,4 @@ const RegisterScreen = () => {
     );
 };
 
-export default RegisterScreen;
+export default Register;
