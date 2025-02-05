@@ -2,7 +2,7 @@ import { ActivityIndicator, Text, TouchableOpacity, View, Image, Keyboard, Alert
 import { TextInput, Button } from "react-native-paper";
 import styles from "./RegisterStyles";
 import { ScrollView } from "react-native";
-import { useContext, useState } from "react";
+import { useEffect, useContext, useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
 import authApis, { endpoints } from "../../configs/APIs";
 import axios from "axios";
@@ -347,4 +347,4 @@ const RestaurantRegisterScreen = () => {
         </View>
     );
 };
-export default RestaurantRegisterScreen;
+export default RestaurantRegisterScreen;    

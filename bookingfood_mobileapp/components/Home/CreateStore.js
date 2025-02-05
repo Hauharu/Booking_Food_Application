@@ -17,6 +17,9 @@ import styles from "./CreateStoreStyles";
 const CreateStore = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [address_line, setAddress_line] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [rating, setRating] = useState("3");
   const [image, setImage] = useState(null);
   const navigation = useNavigation();

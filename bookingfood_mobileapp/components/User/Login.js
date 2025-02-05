@@ -58,6 +58,9 @@ const LoginScreen = () => {
             const currentUser = await authTokenApi.get(endpoints['current-user']);
             const resolvedData = currentUser.data;
 
+            
+            await AsyncStorage.setItem('user_id', resolvedData.id.toString());
+
             dispatch({ 'type': 'login', 'payload': resolvedData });
 
         } catch (ex) {
