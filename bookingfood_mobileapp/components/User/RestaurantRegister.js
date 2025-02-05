@@ -6,6 +6,7 @@ import { useContext, useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
 import authApis, { endpoints } from "../../configs/APIs";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const RestaurantRegisterScreen = () => {
     const [loading, setLoading] = useState(false);
@@ -124,6 +125,7 @@ const RestaurantRegisterScreen = () => {
             const response = await authApis.post(endpoints['createResUser'], form, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
+                    'Authorization': 'token'
                 }
             });
 
