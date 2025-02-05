@@ -11,7 +11,7 @@ const SalesStatistics = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const authAPI = await authApis();
+        const authAPI = await authApis("PMjhQq2nsrlWy7ClV6BJl9QvqdkYJf");
         const response = await authAPI.get(endpoints['statistics']);
         setStats(response.data);
       } catch (error) {
@@ -59,20 +59,6 @@ const SalesStatistics = () => {
         ))
       ) : (
         <Text style={styles.storeContainer}>Không có dữ liệu cửa hàng.</Text>
-      )}
-
-      <Text style={styles.subtitle}>Danh mục sản phẩm</Text>
-      {stats && stats.categories_stats && stats.categories_stats.length > 0 ? (
-        stats.categories_stats.map((category, index) => (
-          <View key={index} style={styles.statContainer}>
-            <Text style={styles.categoryName}>{category.name}</Text>
-            <Text style={styles.storeValue}>Doanh thu tháng: {category.total_cates_month} VND</Text>
-            <Text style={styles.storeValue}>Doanh thu quý: {category.total_cates_quarter} VND</Text>
-            <Text style={styles.storeValue}>Doanh thu năm: {category.total_cates_year} VND</Text>
-          </View>
-        ))
-      ) : (
-        <Text style={styles.storeContainer}>Không có dữ liệu danh mục.</Text>
       )}
     </ScrollView>
   );

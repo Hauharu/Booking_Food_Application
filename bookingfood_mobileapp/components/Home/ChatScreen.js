@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
+  ActivityIndicator,
 } from "react-native";
 import { ref, push, onValue, off, set } from "firebase/database";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -20,8 +21,10 @@ const ChatScreen = ({ route }) => {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [userId, setUserId] = useState("");
+  const [loading, setLoading] = useState(true); // Loading state for messages
 
   const fadeAnim = useRef(new Animated.Value(0)).current; // Hiệu ứng gửi tin nhắn
+  const flatListRef = useRef(null);
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -43,7 +46,7 @@ const ChatScreen = ({ route }) => {
           }));
           setMessages(messagesArray);
 
-          // Đánh dấu tin nhắn là đã đọc
+          // Mark messages as read
           messagesArray.forEach((message) => {
             if (!message.read) {
               const messageRef = ref(
@@ -56,11 +59,21 @@ const ChatScreen = ({ route }) => {
         } else {
           setMessages([]);
         }
+        setLoading(false); // Stop loading once data is fetched
       });
 
-      return () => off(messagesRef);
+      return () => {
+        off(messagesRef);
+        unsubscribe(); // Ensure cleanup of listeners
+      };
     }
   }, [userId, userId2]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages]);
 
   const sendMessage = () => {
     if (text.trim() === "") return;
@@ -98,30 +111,39 @@ const ChatScreen = ({ route }) => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
-      <FlatList
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View
-            style={[
-              styles.messageContainer,
-              item.senderId === userId ? styles.myMessage : styles.otherMessage,
-              item.read && item.receiverId === userId && styles.readMessage,
-            ]}
-          >
-            <Text style={styles.userId}>
-              {item.senderId === userId ? "Bạn" : "Khách hàng"}
-            </Text>
-            <Text style={styles.messageText}>{item.text}</Text>
-            <Text style={styles.timestamp}>
-              {new Date(item.timestamp).toLocaleTimeString()}{" "}
-              {item.read && item.senderId === userId && (
-                <Ionicons name="checkmark-done" size={14} color="green" />
-              )}
-            </Text>
-          </View>
-        )}
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View
+              style={[
+                styles.messageContainer,
+                item.senderId === userId
+                  ? styles.myMessage
+                  : styles.otherMessage,
+                item.read &&
+                  item.receiverId === userId &&
+                  styles.readMessage,
+              ]}
+            >
+              <Text style={styles.userId}>
+                {item.senderId === userId ? "Bạn" : "Khách hàng"}
+              </Text>
+              <Text style={styles.messageText}>{item.text}</Text>
+              <Text style={styles.timestamp}>
+                {new Date(item.timestamp).toLocaleTimeString()}{" "}
+                {item.read && item.senderId === userId && (
+                  <Ionicons name="checkmark-done" size={14} color="green" />
+                )}
+              </Text>
+            </View>
+          )}
+        />
+      )}
 
       <View style={styles.inputContainer}>
         <TextInput

@@ -1101,7 +1101,7 @@ class RevenueViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
-    def monthly_revenue(self, request):
+    def yearly_revenue(self, request):
         year = request.query_params.get('year')
         if not year:
             return Response({'error': 'Year parameter is required.'}, status=400)
@@ -1122,7 +1122,7 @@ class RevenueViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
-    def quarterly_revenue(self, request):
+    def monthly_revenue(self, request):
         year = request.query_params.get('year')
         if not year:
             return Response({'error': 'Year parameter is required.'}, status=400)

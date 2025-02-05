@@ -65,10 +65,7 @@ export const endpoints = {
   'order-confirmC' : (id) => '/Order/{id}/confirm-receipt/', //Xác nhận hoàn thành đơn hàng từ khách hàng 'PATCH'
 
   //API doanh thu
-  'revenue': '/Revenue/', //Xem doanh thu các năm của cửa hàng 'GET'
-  'revenue-monthly': '/Revenue/monthly_revenue/', //Xem doanh thu 12 tháng của một năm cụ thể (Có query một năm cụ thể) 'GET'
-  'revenue-quarterly': '/Revenue/quarterly_revenue/', //Xem doanh thu các quý của một năm cụ thể (Có query một năm cụ thể) 'GET'
-
+    'statistics':'/statistics/'
 }
 
 
