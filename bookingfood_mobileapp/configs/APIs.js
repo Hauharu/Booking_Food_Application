@@ -15,6 +15,7 @@ export const endpoints = {
 
   //API cửa hàng
   createRestaurant: '/Store/',
+  createResUser: '/User/',
   'current-store': (id) => '/Store/${id}/',   //Thông tin và các chức năng liên quan đến cửa hàng 'GET + POST + PATCH + DELETE'
   'current-store-comment': (id) => '/Store/${id}/comment/', //Bình luận cửa hàng 'GET + POST'
   'current-store-follow': (id) => '/Store/${id}/follow/', //Chức năng để theo dõi cửa hàng 'POST'
@@ -71,6 +72,7 @@ export const endpoints = {
   'revenue-quarterly': '/Revenue/quarterly_revenue/', //Xem doanh thu các quý của một năm cụ thể (Có query một năm cụ thể) 'GET'
 
 }
+
 
 export const authApis = async () => {
     const token = await AsyncStorage.getItem('token');

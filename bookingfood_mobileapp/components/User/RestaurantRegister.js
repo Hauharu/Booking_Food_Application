@@ -4,7 +4,7 @@ import styles from "./RegisterStyles";
 import { ScrollView } from "react-native";
 import { useContext, useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
-import APIs, { endpoints } from "../../configs/APIs";
+import authApis, { endpoints } from "../../configs/APIs";
 import axios from "axios";
 
 const RestaurantRegisterScreen = () => {
@@ -121,7 +121,7 @@ const RestaurantRegisterScreen = () => {
                 form.append('image', 'Have not uploaded photos yet');
             }
 
-            const response = await APIs.post(endpoints['register'], form, {
+            const response = await authApis.post(endpoints['createResUser'], form, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 }
@@ -145,15 +145,15 @@ const RestaurantRegisterScreen = () => {
 
     const [query, setQuery] = useState('');
     const [addressRes, setAddressRes] = useState({
-        address: "",
+        address_line: "",
         latitude: "",
         longitude: "",
     });
 
-    const fetchAddress = async (address) => {
+    const fetchAddress = async (address_line) => {
         try {
             const res = await axios.get(`https://maps.gomaps.pro/maps/api/geocode/json?key=AIzaSyCEI0WPbw3uhgoWtees1dBh1jbFPZHXLMc`, {
-                params: { address: address },
+                params: { address_line: address_line },
             });
             if (res.data.status === 'OK') {
                 console.log(res.data.results);
@@ -165,14 +165,14 @@ const RestaurantRegisterScreen = () => {
                 console.log(location.lat);
 
                 setAddressRes({
-                    address: formatted_address,
+                    address_line: formatted_address,
                     latitude: location.lat,
                     longitude: location.lng,
                 });
             } else {
                 Alert.alert('Lỗi', 'Địa chỉ không hợp lệ, vui lòng kiểm tra lại.');
                 setAddressRes({
-                    address: "",
+                    address_line: "",
                     latitude: "",
                     longitude: "",
                 });
@@ -198,7 +198,7 @@ const RestaurantRegisterScreen = () => {
             form.append('owner', Number(newUserId));
 
             await fetchAddress(query);
-            form.append('address', addressRes.address);
+            form.append('address', addressRes.address_line);
             form.append('latitude', addressRes.latitude);
             form.append('longitude', addressRes.longitude);
 
@@ -211,12 +211,10 @@ const RestaurantRegisterScreen = () => {
             } else {
                 form.append('image', 'Have not uploaded photos yet');
             }
-            const token = "Bearer " + (await AsyncStorage.getItem("access_token"));
-
-            const response = await APIs.post(endpoints['createRestaurant'], form, {
+            const response = await authApis.post(endpoints['createRestaurant'], form, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    'Authorization': token  
+                      
                 }
             });
 

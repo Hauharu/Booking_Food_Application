@@ -152,7 +152,7 @@ export default StyleSheet.create({
   mainCategoryImg: {
     width: 60,
     height: 60,
-    backgroundColor: "#f1f1f1", //#f1f1f1 mau nay ne
+    backgroundColor: "#f1f1f1", 
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
