@@ -188,7 +188,7 @@ const UserProfile = () => {
       {/* Recent Activities */}
       <Button
         mode="contained"
-        onPress={() => nav.navigate("RestaurantRegister")}
+        onPress={() => nav.navigate("CreateStore")}
         style={styles.registerButton}
       >
         Đăng kí cửa hàng

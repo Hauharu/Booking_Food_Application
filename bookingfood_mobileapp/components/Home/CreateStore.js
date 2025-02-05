@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Image,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
+import {View,Text,TextInput,Image,TouchableOpacity,Alert } from "react-native";
 import { Button } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -18,8 +11,6 @@ const CreateStore = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [address_line, setAddress_line] = useState("");
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
   const [rating, setRating] = useState("3");
   const [image, setImage] = useState(null);
   const navigation = useNavigation();
@@ -46,7 +37,7 @@ const CreateStore = () => {
 
   // Gửi dữ liệu lên API
   const createStore = async () => {
-    if (!name || !description) {
+    if (!name || !description || !address_line) {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin!");
       return;
     }
@@ -60,9 +51,10 @@ const CreateStore = () => {
 
       const formData = new FormData();
       const userId = await getUserId();  // Lấy id người dùng bất đồng bộ
-      formData.append("seller", userId);  // Gửi ID người bán
+      formData.append("STORE", userId);  // Gửi ID người bán
       formData.append("name", name);
       formData.append("description", description);
+      formData.append("address_line", address_line);
       formData.append("rating", rating);
       formData.append("active", "True");
 
@@ -78,7 +70,7 @@ const CreateStore = () => {
         });
       }
 
-      const response = await APIs.post(endpoints['stores'], formData, {
+      const response = await APIs.post(endpoints['store'], formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -114,7 +106,12 @@ const CreateStore = () => {
         value={description}
         onChangeText={setDescription}
       />
-
+      <TextInput
+        style={styles.input}
+        placeholder="Địa chỉ cửa hàng"
+        value={address_line}
+        onChangeText={setAddress_line}
+      />
       <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
         {image ? (
           <Image source={{ uri: image }} style={styles.image} />

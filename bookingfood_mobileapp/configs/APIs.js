@@ -12,10 +12,8 @@ export const endpoints = {
   'current-user-followedstore': '/User/current-user/followed-store/',   //Cửa hàng người dùng theo dõi 'GET'
   'current-user-reviews': '/User/current-user/reviews/', //Các comments và reviews của người dùng 'GET'
   'store': '/Store/',   //Lấy danh sách cửa hàng và chức năng tạo cửa hàng 'GET + POST'
-
+  createRestaurant: '/store/',
   //API cửa hàng
-  createRestaurant: '/Store/',
-  createResUser: '/User/',
   'current-store': (id) => '/Store/${id}/',   //Thông tin và các chức năng liên quan đến cửa hàng 'GET + POST + PATCH + DELETE'
   'current-store-comment': (id) => '/Store/${id}/comment/', //Bình luận cửa hàng 'GET + POST'
   'current-store-follow': (id) => '/Store/${id}/follow/', //Chức năng để theo dõi cửa hàng 'POST'
@@ -76,6 +74,7 @@ export const endpoints = {
 
 export const authApis = async () => {
     const token = await AsyncStorage.getItem('token');
+    console.log(token);
     if (!token) {
         console.error("Token không tồn tại");
         throw new Error("Token không tồn tại");
