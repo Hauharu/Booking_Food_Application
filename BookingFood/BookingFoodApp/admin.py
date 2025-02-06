@@ -2,7 +2,12 @@ import calendar
 import json
 from datetime import datetime
 from collections import defaultdict
-from .models import Menu, Food, Store, User, Comment, Order, OrderDetail, UserFollowedStore, Address, Category, Review
+
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.forms import UserChangeForm
+from django.contrib.auth.hashers import make_password
+
+from .models import Menu, Food, Store, User, Comment, Order, OrderDetail, UserFollowedStore, Address, Category, Review, Cart
 from . import cloud_path
 from django.db.models import Count
 from . import dao
@@ -22,74 +27,7 @@ class BookingFoodAdminSite(admin.AdminSite):
     index_title = "Chào mừng đến với trang quản trị"
 
 
-    # # Định nghĩa các URL tùy chỉnh cho admin
-    # def get_urls(self):
-    #     urls = super().get_urls()
-    #     custom_urls = [
-    #         path('stats/', self.stats_view),  # Thêm một view tùy chỉnh để hiển thị thống kê
-    #     ]
-    #     return custom_urls + urls
-    #
-    # # View để hiển thị thống kê về các đơn hàng của cửa hàng
-    # def stats_view(self, request):
-    #     current_year = datetime.now().year  # Lấy năm hiện tại
-    #     user_store = Store.objects.filter(user=request.user).first()  # Lấy cửa hàng của người dùng đang đăng nhập
-    #
-    #     # Lấy tất cả các đơn hàng của cửa hàng
-    #     all_orders = Order.objects.filter(store=user_store)
-    #
-    #     # Tính toán dữ liệu cho biểu đồ hàng tháng
-    #     monthly_data = [0] * 12
-    #     for order in all_orders:
-    #         month = order.order_date.month - 1
-    #         year = order.order_date.year
-    #         if year == current_year:
-    #             monthly_data[month] += order.total
-    #
-    #     monthly_labels = [calendar.month_name[i] for i in range(1, 13)]  # Lấy tên tháng
-    #
-    #     # Tính toán dữ liệu cho biểu đồ hàng quý
-    #     quarterly_data = [0] * 4
-    #     for order in all_orders:
-    #         quarter = (order.order_date.month - 1) // 3  # Xác định quý của đơn hàng
-    #         year = order.order_date.year
-    #         if year == current_year:
-    #             quarterly_data[quarter] += order.total
-    #
-    #     quarterly_labels = [f'Quý {i}' for i in range(1, 5)]  # Tạo nhãn cho các quý
-    #
-    #     # Tính toán doanh thu hàng năm cho biểu đồ
-    #     yearly_revenue = defaultdict(int)
-    #     for order in all_orders:
-    #         year = order.order_date.year
-    #         yearly_revenue[year] += order.total
-    #
-    #     yearly_labels = sorted(yearly_revenue.keys())  # Sắp xếp các năm
-    #     yearly_data = [yearly_revenue[year] for year in yearly_labels]  # Lấy doanh thu cho từng năm
-    #
-    #     # Lấy tổng số nhà hàng và người dùng
-    #     total_store = dao.count_store()
-    #     total_user = dao.count_user()
-    #
-    #     # Thống kê món ăn của nhà hàng
-    #     stats = Store.objects \
-    #         .annotate(food_count=Count('food')) \
-    #         .values('id', 'name', 'food_count')
-    #
-    #     # Chuẩn bị dữ liệu gửi vào template để hiển thị
-    #     context = {
-    #         'total_user': total_user,
-    #         'total_store': total_store,
-    #         'store_stats': stats,
-    #         'monthly_labels': monthly_labels,
-    #         'monthly_data': monthly_data,
-    #         'quarterly_labels': quarterly_labels,
-    #         'quarterly_data': quarterly_data,
-    #         'yearly_labels': yearly_labels,
-    #         'yearly_data': yearly_data,
-    #         'current_year': current_year,
-    #     }
-    #     return TemplateResponse(request, 'admin/stats.html', context)
+
     # Định nghĩa các URL tùy chỉnh cho admin
     def get_urls(self):
         urls = super().get_urls()
@@ -184,8 +122,9 @@ admin_site = BookingFoodAdminSite(name="BookingFood")
 #         fields = '__all__'
 
 
+
 # Cấu hình cho mô hình User
-class UserAdmin(admin.ModelAdmin):
+class UserA(UserAdmin):
     list_display = ['id', 'username', 'user_role', 'image', 'email', 'phone', 'is_verified', 'date_joined', 'is_active']
     search_fields = ['username', 'email', 'phone']
     list_filter = ['user_role', 'is_verified', 'is_active']
@@ -196,11 +135,12 @@ class UserAdmin(admin.ModelAdmin):
         # Hiển thị ảnh đại diện của người dùng dưới dạng hình ảnh trong admin panel
         if user.avatar:
             return mark_safe(
-                # "<img src='{cloud_path}{image_name}' width='50' height='50' />".format(cloud_path=cloud_path,
-                #                                                                        image_name=user.avatar)
-                f"<img src='/static/{user.avatar}' width='50' height='50' />"
+                "<img src='{cloud_path}{image_name}' width='50' height='50' />".format(cloud_path=cloud_path,
+                                                                                       image_name=user.avatar)
             )
-
+    fieldsets = UserAdmin.fieldsets + (
+            (None, {'fields': ('phone', 'is_verified', 'avatar')}),
+    )
 
 # Form để tùy chỉnh mô hình Store trong giao diện quản trị
 class StoreandMenuForm(forms.ModelForm):
@@ -221,9 +161,8 @@ class StoreAdmin(admin.ModelAdmin):
         # Hiển thị ảnh đại diện của cửa hàng dưới dạng hình ảnh trong admin panel
         if store.image:
             return mark_safe(
-                # "<img src='{cloud_path}{image_name}' width='50' height='50' />".format(cloud_path=cloud_path,
-                #                                                                        image_name=store.image))
-                f"<img src='/static/{store.image}' width='50' height='50' />"
+                "<img src='{cloud_path}{image_name}' width='50' height='50' />".format(cloud_path=cloud_path,
+                                                                                       image_name=store.image)
             )
     def save_model(self, request, obj, form, change):
         if change:
@@ -264,9 +203,8 @@ class FoodAdmin(admin.ModelAdmin):
         # Hiển thị hình ảnh món ăn trong admin panel
         if food:
             return mark_safe(
-                # "<img src='{cloud_path}{image_name}' width='50' height='50' />".format(cloud_path=cloud_path,
-                #                                                                        image_name=food.image)
-                f"<img src='/static/{food.image}' width='50' height='50' />"
+                "<img src='{cloud_path}{image_name}' width='50' height='50' />".format(cloud_path=cloud_path,
+                                                                                       image_name=food.image)
             )
 
     def get_categories(self, obj):
@@ -361,7 +299,7 @@ class FollowAdmin(admin.ModelAdmin):
 
 
 # Đăng ký các mô hình với AdminSite tùy chỉnh
-admin_site.register(User, UserAdmin)
+admin_site.register(User, UserA)
 admin_site.register(Store, StoreAdmin)
 admin_site.register(Food, FoodAdmin)
 admin_site.register(Category, CategoryAdmin)
@@ -371,3 +309,4 @@ admin_site.register(Menu, MenuAdmin)
 admin_site.register(Comment, CommentAdmin)
 admin_site.register(Review, ReviewAdmin)
 admin_site.register(UserFollowedStore, FollowAdmin)
+admin_site.register(Cart)

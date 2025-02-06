@@ -6,16 +6,21 @@ from django.http import HttpResponse
 from django.utils.dateparse import parse_time
 from django.views.decorators.csrf import csrf_exempt
 from datetime import time, datetime
+from .models import Food, Order, Store, User, Address, UserFollowedStore, Menu, Cart, CartItem, Category, Search, OrderDetail, Comment, Review
+from .models import *
 from pytz import timezone
 from rest_framework.exceptions import ValidationError
+from django.db import transaction
 from rest_framework.permissions import IsAuthenticated
 
+from decimal import Decimal
 from . import paginators, utils
+from .paginators import FoodPaginator
 from rest_framework import viewsets, permissions, generics, parsers, status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action, permission_classes
 from rest_framework.views import Response, APIView
-from .models import *
+
 from .perms import *
 from .serializers import (UserSerializer, StoreSerializer, MenuSerializer, CategorySerializer,
                           CommentSerializer, FoodInCategorySerializer, OrderSerializer, FoodSerializer,
@@ -25,46 +30,14 @@ from .serializers import (UserSerializer, StoreSerializer, MenuSerializer, Categ
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q, Count, FloatField
-from .models import Food
+
 from .serializers import FoodSerializer
 
 
 # API tìm kiếm đồ ăn
 class FoodSearchView(APIView):
+    pagination_class = FoodPaginator
     def get(self, request):
-        # # Retrieve form-data
-        # query = request.data.get('q', '')  # Search term
-        # category = request.data.get('category', None)  # Category ID
-        # store = request.data.get('store', None)  # Store ID
-        # min_price = request.data.get('min_price', None)  # Minimum price
-        # max_price = request.data.get('max_price', None)
-        #
-        # # Base query
-        # foods = Food.objects.all()
-        #
-        # # Filter by query if provided
-        # if query:
-        #     foods = foods.filter(name__icontains=query)
-        #
-        # # Filter by category if provided
-        # if category:
-        #     foods = foods.filter(categories__id=category)
-        #
-        # # Filter by store if provided
-        # if store:
-        #     foods = foods.filter(store_id=store)
-        #
-        # # Filter by min_price if provided
-        # if min_price:
-        #     foods = foods.filter(price__gte=min_price)
-        #
-        # # Filter by max_price if provided
-        # if max_price:
-        #     foods = foods.filter(price__lte=max_price)
-        #
-        # # Serialize the data
-        # serializer = FoodSerializer(foods, many=True)
-        # return Response(serializer.data)
 
         query = request.query_params.get('q', '')  # Search term
         category = request.query_params.get('category', None)  # Category ID
@@ -104,6 +77,17 @@ class FoodSearchView(APIView):
         return Response(serializer.data)
 
 
+
+class StoreListViewSet(viewsets.ViewSet):
+    """
+    A simple ViewSet for listing stores without pagination.
+    """
+    def list(self, request):
+        queryset = Store.objects.filter(active=True).order_by('id')
+        serializer = StoreSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+
 # Viewset cửa hàng
 class StoreViewSet(viewsets.ModelViewSet):
     queryset = Store.objects.all().order_by('id')
@@ -121,7 +105,7 @@ class StoreViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_permissions(self):
-        if self.action in ['list', 'manage_food'] or (self.action == 'comment' and self.request.method == 'GET'):
+        if self.action in ['list', 'manage_food'] or (self.action == 'comment' and self.request.method == 'GET') or (self.action == 'get_foods' and self.request.method == 'GET'):
             return [permissions.AllowAny(), ]
         if self.action == 'retrieve':
             id = self.kwargs.get('pk')  # self.kwargs.get('pk') trả về 1 str
@@ -143,8 +127,8 @@ class StoreViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data
         store = Store.objects.create(name=data['name'], description=data['description'],
-                                     address_line=data['address_line'], user=request.user, latitude=data['latitude'],
-                                     longitude=data['longitude'],
+                                     address_line=data['address_line'], user=request.user, latitude=data.get('latitude', None),
+                                     longitude=data.get('longitude', None),
                                      image=data['image'])
 
         return Response(data=StoreSerializer(store).data, status=status.HTTP_201_CREATED)
@@ -205,7 +189,7 @@ class StoreViewSet(viewsets.ModelViewSet):
     @action(methods=['get'], detail=True, url_path='foods', url_name='foods')
     def get_foods(self, request, pk=None):
         store = self.get_object()  # Get the Store instance
-        foods = store.foods.all()  # Assuming there's a related field `foods` in Store
+        foods = store.food.all()  # Assuming there's a related field `foods` in Store
         serializer = FoodSerializer(foods, many=True)  # You will need a `FoodSerializer`
         return Response(serializer.data)
 
@@ -257,6 +241,18 @@ class UserViewSet(viewsets.ViewSet):
 
     def create(self, request):
         instance = request.data
+
+        if User.objects.filter(username=instance['username']).exists():
+            return Response({'error': 'Username already exists'}, status=status.HTTP_409_CONFLICT)
+
+        # Check for duplicate phone
+        if User.objects.filter(phone=instance['phone']).exists():
+            return Response({'error': 'Phone number already exists'}, status=status.HTTP_409_CONFLICT)
+
+        # Check for duplicate email
+        if User.objects.filter(email=instance['email']).exists():
+            return Response({'error': 'Email already exists'}, status=status.HTTP_409_CONFLICT)
+
         user = User.objects.create_user(username=instance['username'], password=instance['password'],
                                         first_name=instance['first_name'], last_name=instance['last_name'],
                                         phone=instance['phone'], email=instance['email'],
@@ -276,15 +272,16 @@ class UserViewSet(viewsets.ViewSet):
 
                 # goi phuong thuc update de password dc ma hoa và lưu lại
             UserSerializer().update(instance=user, validated_data=request.data)
-        return Response(UserSerializer(user).data)
+        serializer = UserSerializer(user, context={'request': request})
+        return Response(serializer.data)
 
     @action(methods=['post', 'get', 'patch'], url_path='current-user/address', detail=False)
     def add_get_address(self, request):
         user = request.user
         data = request.data
         if request.method.__eq__('POST'):
-            address = Address.objects.create(address_ship=data['address_ship'], latitude=data['latitude'],
-                                             longitude=data['longitude'], user=user)
+            address = Address.objects.create(address_ship=data['address_ship'], latitude=data.get('latitude', None),
+                                             longitude=data.get('longitude', None), user=user)
             return Response(AddressSerializer(address).data, status=status.HTTP_201_CREATED)
 
         # Handle PATCH (update an existing address)
@@ -322,21 +319,33 @@ class UserViewSet(viewsets.ViewSet):
         return Response(OrderSerializer(request.user.orders, many=True).data, status=status.HTTP_200_OK)
 
     @action(methods=['get'], url_path='current-user/reviews', detail=False)
-    def get_reviews_and_comments(self, request):
+    def get_reviews(self, request):
         user = request.user
 
-        # Assuming user has related reviews and comments, you can modify the queries as needed
-        reviews = Review.objects.filter(user=user)  # Get all reviews by the logged-in user
-        comments = Comment.objects.filter(user=user)  # Get all comments by the logged-in user
+        # Get all reviews by the logged-in user
+        reviews = Review.objects.filter(user=user)
 
-        # Serialize the reviews and comments
+        # Serialize the reviews
         review_data = ReviewSerializer(reviews, many=True).data
-        comment_data = CommentSerializer(comments, many=True).data
 
         # Return the data in the response
         return Response({
             'reviews': review_data,
-            'comments': comment_data
+        }, status=status.HTTP_200_OK)
+
+    @action(methods=['get'], url_path='current-user/comments', detail=False)
+    def get_comments(self, request):
+        user = request.user
+
+        # Get all comments by the logged-in user
+        comments = Comment.objects.filter(user=user)
+
+        # Serialize the comments
+        comment_data = CommentSerializer(comments, many=True).data
+
+        # Return the data in the response
+        return Response({
+            'comments': comment_data,
         }, status=status.HTTP_200_OK)
 
 
@@ -776,6 +785,14 @@ class OrderViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAP
             return [permissions.IsAuthenticated(), IsOrderOwner(), ]
         return [permissions.IsAuthenticated(), ]
 
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+
+    def get_permissions(self):
+        if self.action in ['retrieve', 'cancel_order']:
+            return [permissions.IsAuthenticated(), IsOrderOwner(), ]
+        return [permissions.IsAuthenticated(), ]
+
     def create(self, request, *args, **kwargs):
         """
         {
@@ -804,39 +821,40 @@ class OrderViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAP
         except Store.DoesNotExist:
             raise Exception('Store not found')
 
-            # Get the user's active cart
-            cart = Cart.objects.filter(user=request.user, active=True).first()
-            if not cart:
-                raise ValidationError("No active cart found.")
+        # Get the user's active cart
+        cart = Cart.objects.filter(user=request.user, active=True).first()
+        if not cart:
+            raise ValidationError("No active cart found.")
 
-            # Check if cart items belong to the same store
-            cart_items = CartItem.objects.filter(cart=cart, active=True)
-            for item in cart_items:
-                if item.food.store != store:
-                    raise ValidationError(f'Food {item.food.name} does not belong to the specified store.')
+        # Check if cart items belong to the same store
+        cart_items = CartItem.objects.filter(cart=cart, active=True)
+        for item in cart_items:
+            if item.food.store != store:
+                raise ValidationError(f'Food {item.food.name} does not belong to the specified store.')
 
-            # Create the order object
-            order = Order.objects.create(
-                user=request.user,
-                store=store,
-                total=cart.total_price + data['delivery_fee'],  # Use the total_price property from Cart
-                delivery_fee=data['delivery_fee'],
-                address_ship=address,
+        # Create the order object
+        order = Order.objects.create(
+            user=request.user,
+            store=store,
+            total = cart.total_price + Decimal(str(data['delivery_fee'])),
+            delivery_fee=15000,
+            address_ship=address,
+        )
+
+        # Transfer cart items to the order
+        for cart_item in cart_items:
+            order_item = OrderDetail.objects.create(
+                order=order,
+                food=cart_item.food,
+                quantity=cart_item.quantity,
+                unit_price=cart_item.food.price
             )
 
-            # Transfer cart items to the order
-            for cart_item in cart_items:
-                order_item = OrderDetail.objects.create(
-                    order=order,
-                    food=cart_item.food,
-                    quantity=cart_item.quantity,
-                    unit_price=cart_item.food.price
-                )
+        # Now, we need to delete the cart once the order is created
+        cart.delete()
 
-            # Now, we need to delete the cart once the order is created
-            cart.delete()
+        return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
 
-            return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
 
     @action(methods=['get'], url_path='pending-order-of-my-store', detail=False)
     def get_order(self, request):
@@ -844,7 +862,7 @@ class OrderViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAP
             my_store = request.user.store
         except Store.DoesNotExist:
             return Response('Lỗi: Bạn không có cửa hàng!', status=status.HTTP_404_NOT_FOUND)
-        return Response(OrderSerializer(my_store.orders_for_store.filter(status='PENDING'), many=True).data,
+        return Response(OrderSerializer(my_store.orders.filter(order_status=Order.PENDING), many=True).data,
                         status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['patch'], url_path='confirm-order')
@@ -890,6 +908,19 @@ class OrderViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.RetrieveAP
         order.order_status = Order.SUCCESS
         order.save()
         return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], url_path='orders-of-my-store')
+    def get_all_orders_of_my_store(self, request):
+        """
+        This function will return all orders belonging to the user's store.
+        """
+        try:
+            my_store = request.user.store
+        except Store.DoesNotExist:
+            return Response('Error: You do not have a store!', status=status.HTTP_404_NOT_FOUND)
+
+        orders = my_store.orders.all()
+        return Response(OrderSerializer(orders, many=True).data, status=status.HTTP_200_OK)
 
 
 class PublicFoodViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView):
@@ -969,6 +1000,7 @@ class CartViewSet(viewsets.ViewSet):
     """
     A simple ViewSet for viewing and editing cart items.
     """
+    permission_classes = [IsAuthenticated]
 
     def list(self, request):
         # List the cart for the current user
@@ -989,25 +1021,29 @@ class CartViewSet(viewsets.ViewSet):
             try:
                 quantity = int(quantity)  # Ensure quantity is an integer
                 if quantity < 1:
-                    raise ValidationError("Quantity must be at least 1.")
+                    return Response({"error_code": 400, "error_message": "Quantity must be at least 1."}, status=400)
             except ValueError:
-                raise ValidationError("Invalid quantity value.")
+                return Response({"error_code": 400, "error_message": "Invalid quantity value."}, status=400)
 
         # Get the food item that is being added to the cart
         try:
             food = Food.objects.get(id=food_id)
         except Food.DoesNotExist:
-            raise ValidationError("Food item does not exist.")
+            return Response({"error_code": 404, "error_message": "Food item does not exist."}, status=404)
 
         now = datetime.now().time()
 
         if food.start_time and food.end_time:
             if not (food.start_time <= now <= food.end_time):
-                raise ValidationError(f"Food item {food.name} is not available at this time.")
+                return Response(
+                    {"error_code": 400, "error_message": f"Food item {food.name} is not available at this time."},
+                    status=400)
 
         if user.user_role == User.STORE and user.store:
             if food.store == user.store:
-                raise ValidationError("You cannot add food from your own store to the cart.")
+                return Response(
+                    {"error_code": 400, "error_message": "You cannot add food from your own store to the cart."},
+                    status=400)
 
         # Get the user's cart or create one if it doesn't exist
         cart, created = Cart.objects.get_or_create(user=user, active=True)
@@ -1018,40 +1054,29 @@ class CartViewSet(viewsets.ViewSet):
             first_food_store = first_food_item.food.store  # Get the store of the first item in the cart
 
             # Check if the new food item is from a different store
-            if food.store != first_food_store:
-                raise ValidationError(
-                    f"Cannot add food from a different store. The first item in the cart is from {first_food_store.name}.")
+            first_food_store = None
+            if user.cart_items.exists():
+                first_food_store = user.cart_items.first().food.store
+                if food.store != first_food_store:
+                    return Response({"error_code": 400,
+                                     "error_message": f"Cannot add food from a different store. The first item in the cart is from {first_food_store.name}."},
+                                    status=400)
 
-        # # Add the food item to the cart
-        # cart_item, created = CartItem.objects.get_or_create(
-        #     cart=cart,
-        #     food=food,
-        #     defaults={'quantity': 0}  # If the item doesn't exist, initialize the quantity to 0
-        # )
-        #
-        # # Update the quantity of the food item in the cart
-        # cart_item.quantity += int(request.data.get('quantity', 0))
-        # cart_item.save()
-        #
-        # # Return the updated cart
-        # serializer = CartSerializer(cart)
-        # return Response(serializer.data, status=status.HTTP_200_OK)
-
-        # Kiểm tra xem món ăn đã có trong giỏ hàng chưa
+        # Add the food item to the cart
         cart_item, created = CartItem.objects.get_or_create(cart=cart, food=food)
 
-        if not created:  # Nếu món ăn đã có trong giỏ hàng, tăng số lượng lên
+        if not created:  # If the item already exists in the cart, increase the quantity
             cart_item.quantity += quantity
             cart_item.save()
-        else:  # Nếu món ăn chưa có, khởi tạo số lượng
+        else:  # If the item doesn't exist, initialize the quantity
             cart_item.quantity = quantity
             cart_item.save()
 
-        # Cập nhật tổng giá trị của giỏ hàng
-        cart.total = cart.total_price  # Cập nhật tổng tiền giỏ hàng
+        # Update the cart's total value
+        cart.total = cart.total_price  # Update the cart's total price
         cart.save()
 
-        # Trả về giỏ hàng sau khi cập nhật
+        # Return the updated cart
         serializer = CartSerializer(cart)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -1101,7 +1126,7 @@ class RevenueViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
-    def yearly_revenue(self, request):
+    def monthly_revenue(self, request):
         year = request.query_params.get('year')
         if not year:
             return Response({'error': 'Year parameter is required.'}, status=400)
@@ -1122,7 +1147,7 @@ class RevenueViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
-    def monthly_revenue(self, request):
+    def quarterly_revenue(self, request):
         year = request.query_params.get('year')
         if not year:
             return Response({'error': 'Year parameter is required.'}, status=400)
@@ -1141,3 +1166,89 @@ class RevenueViewSet(viewsets.ViewSet):
 
         serializer = QuarterlyRevenueSerializer(quarterly_revenue, many=True)
         return Response(serializer.data)
+
+class StatisticsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        user = request.user
+
+        if user.user_role == User.STORE:
+            store = Store.objects.filter(seller=user).first()
+            if not store:
+                return Response({'error': 'User does not have an associated store.'}, status=400)
+
+            orders = Order.objects.filter(store=store, order_status=Order.SUCCESS)
+
+            yearly_revenue = orders.annotate(year=ExtractYear('created_date')) \
+                .values('year') \
+                .annotate(revenue=Sum('total')) \
+                .order_by('-year')
+
+            quarterly_revenue = orders.annotate(quarter=ExtractQuarter('created_date')) \
+                .values('quarter') \
+                .annotate(revenue=Sum('total')) \
+                .order_by('quarter')
+
+            monthly_revenue = orders.annotate(month=ExtractMonth('created_date')) \
+                .values('month') \
+                .annotate(revenue=Sum('total')) \
+                .order_by('month')
+
+            stores_stats = store.annotate(
+                total_sales_month=monthly_revenue,
+                total_sales_quarter=quarterly_revenue,
+                total_sales_year=yearly_revenue
+            )
+
+            categories_stats = Category.objects.filter(products__store__seller=user).annotate(
+                total_cates_month=Sum(
+                    Case(
+                        When(
+                            products__order_items__order__created_at__month=timezone.now().month,
+                            then=F('products__order_items__quantity') * F('products__order_items__price')
+                        ),
+                        default=0,
+                        output_field=IntegerField()
+                    )
+                ),
+                total_cates_quarter=Sum(
+                    Case(
+                        When(
+                            products__order_items__order__created_at__quarter=(timezone.now().month - 1) // 3 + 1,
+                            then=F('products__order_items__quantity') * F('products__order_items__price')
+                        ),
+                        default=0,
+                        output_field=IntegerField()
+                    )
+                ),
+                total_cates_year=Sum(
+                    Case(
+                        When(
+                            products__order_items__order__created_at__year=timezone.now().year,
+                            then=F('products__order_items__quantity') * F('products__order_items__price')
+                        ),
+                        default=0,
+                        output_field=IntegerField()
+                    )
+                )
+            ).distinct()
+
+        else:
+            return Response({"error": "Bạn không có quyền truy cập"}, status=403)
+
+        return Response({
+            'stores_stats': list(stores_stats.values(
+                'name',
+                'total_sales_month',
+                'total_sales_quarter',
+                'total_sales_year'
+            )),
+            'categories_stats': list(categories_stats.values(
+                'name',
+                'total_cates_month',
+                'total_cates_quarter',
+                'total_cates_year'
+            ))
+        })
+

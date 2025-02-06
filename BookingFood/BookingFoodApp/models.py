@@ -23,7 +23,7 @@ class BaseModel(models.Model):
 
 # User: Lớp mô tả thông tin người dùng với các vai trò.
 class User(AbstractUser):
-    avatar = models.ImageField(upload_to='avatar/%Y/%m/')
+    avatar = CloudinaryField('avatar', default='', null=True)
     phone = models.CharField(max_length=10, null=False, unique=True, default=False)
     is_verified = models.BooleanField(default=False)
     USER, STORE = range(2)
@@ -55,7 +55,7 @@ class Address(models.Model):
 class Store(models.Model):
     name = models.CharField(max_length=255, null=False, unique=True)
     description = RichTextField(null=True, blank=True)
-    image = models.ImageField(upload_to='stores/%Y/%m/')
+    image = CloudinaryField('image', default='', null=True, blank=True)
     address_line = models.CharField(max_length=255, default='Ho Chi Minh City', blank=False)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
@@ -130,7 +130,7 @@ class Food(BaseModel):
     ]
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='out_of_stock')
     average_rating = models.DecimalField(max_digits=2, decimal_places=1, blank=True, null=True)
-    image = models.ImageField(upload_to='foods/%Y/%m/')
+    image = CloudinaryField('image', default='', null=True)
     store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='food', blank=False)
     menu = models.ForeignKey(Menu, on_delete=models.PROTECT, related_name='food', null=True,blank=True)
     categories = models.ManyToManyField('Category', related_name='food',blank=True)
@@ -223,7 +223,7 @@ class Search(models.Model):
 class Order(BaseModel):
     total = models.DecimalField(max_digits=9, decimal_places=2)
     delivery_fee = models.DecimalField(max_digits=6, decimal_places=0)
-    payment_status = models.BooleanField(default=False)
+    payment_status = models.BooleanField(default=True)
     PENDING, CANCELLED, ACCEPTED, SUCCESS = range(4)
     STATUS_CHOICES = [
         (PENDING, "Pending"),
@@ -232,7 +232,6 @@ class Order(BaseModel):
         (SUCCESS, "Success"),
     ]
     order_status = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, default=PENDING)
-    payment = models.ForeignKey('PaymentVNPay', on_delete=models.SET_NULL, null=True, related_name='orders', blank=True)
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='orders')
     store = models.ForeignKey(Store, on_delete=models.SET_NULL, null=True, related_name='orders')
     address_ship = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
@@ -246,23 +245,8 @@ class Order(BaseModel):
 class OrderDetail(models.Model):
     unit_price = models.DecimalField(max_digits=10, decimal_places=0)
     quantity = models.PositiveIntegerField()
-    order = models.ForeignKey(Order, related_name='order_details', on_delete=models.RESTRICT)
+    order = models.ForeignKey(Order, related_name='order_details', on_delete=models.CASCADE)
     food = models.ForeignKey(Food, on_delete=models.RESTRICT)
-
-
-
-# Payment_VNPay: Thông tin thanh toán qua VNPay.
-class PaymentVNPay(models.Model):
-    order_id = models.BigIntegerField(default=0, null=True, blank=True)
-    amount = models.FloatField(default=0.0, null=True, blank=True)
-    order_desc = models.CharField(max_length=200, null=True, blank=True)
-    vnp_TransactionNo = models.CharField(max_length=200, null=True, blank=True)
-    vnp_ResponseCode = models.CharField(max_length=200, null=True, blank=True)
-    customer = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    food = models.ManyToManyField(Food, through='PaymentVNPayDetail', related_name='hoadon_vnpay')
-    menu = models.ManyToManyField(Menu, through='PaymentVNPayDetail', related_name='hoadon_vnpay_menu')
-    cartItemIds = models.CharField(max_length=200, null=True, blank=True)
-    payment_date = models.DateTimeField(null=True, blank=True)
 
 
 # ActionBase: Lớp hành động cơ bản (like, comment, rate).
@@ -300,17 +284,17 @@ def update_average_rating(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Comment)
 def update_average_rating_on_delete(sender, instance, **kwargs):
-    food = instance.food
+    stores = instance.store
 
     # Get remaining reviews for the food item
-    Comments = Comment.objects.filter(food=food)
+    Comments = Comment.objects.filter(store=stores)
 
     # Recalculate the average rating
     total_rating = sum(review.rating for review in Comments)
     count = Comments.count()
 
-    food.average_rating = total_rating / count if count > 0 else 0
-    food.save()
+    stores.average_rating = total_rating / count if count > 0 else 0
+    stores.save()
 
 
 class ActionBaseR(BaseModel):
@@ -363,7 +347,3 @@ class ChatMessage(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
     receiver = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
-
-
-
-

@@ -1,16 +1,24 @@
 from rest_framework import serializers
 from .models import User, Store, Menu, Category, Comment, Food, Order, OrderDetail, Address, UserFollowedStore, Review, \
-    Cart, CartItem, Notification
+    Cart, CartItem
 from . import cloud_path
 
 
+# Serializer quản lý thông tin người dùng
+
 class UserSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField(source='avatar')
+    store = serializers.SerializerMethodField()
 
     def get_image(self, user):
-        # Trả về URL ảnh đại diện của người dùng nếu tồn tại
-        if user.avatar:
-            return '{cloud_path}{image_name}'.format(cloud_path=cloud_path, image_name=user.avatar)
+            if user.avatar:
+                return '{cloud_path}{image_name}'.format(cloud_path=cloud_path, image_name=user.avatar)
+
+
+    def get_store(self, user):
+        if hasattr(user, 'store'):
+            return user.store.id
+        return None
 
     def create(self, validated_data):
         # Tạo người dùng mới từ dữ liệu đã validate
@@ -23,7 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name',
-                  'date_joined', 'last_login', 'image', 'phone', 'user_role']
+                  'date_joined', 'last_login', 'image', 'phone', 'user_role', 'is_verified', 'store']
         extra_kwargs = {
             'avatar': {'write_only': True},
             'password': {'write_only': True}
@@ -33,7 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
-        fields = ['address_ship', 'latitude', 'longitude', 'user']
+        fields = ['id' , 'address_ship', 'latitude', 'longitude', 'user']
 
 
 # Serializer quản lý dữ liệu cửa hàng
@@ -47,9 +55,8 @@ class StoreSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField(source='image')
 
     def get_image(self, store):
-        # Trả về URL hình ảnh đại diện của cửa hàng nếu tồn tại
-        if store.image:
-            return '{cloud_path}{image_name}'.format(cloud_path=cloud_path, image_name=store.image)
+            if store.image:
+                return '{cloud_path}{image_name}'.format(cloud_path=cloud_path, image_name=store.image)
 
     class Meta:
         model = Store  # Gắn serializer với model Store
@@ -64,10 +71,6 @@ class UserFollowedStoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserFollowedStore
         fields = ['id', 'user', 'store', 'followed_at']
-
-    # Serializer quản lý thông tin người dùng
-
-
 
 
     # Serializer quản lý danh mục món ăn
@@ -97,40 +100,42 @@ class MenuSerializer(serializers.ModelSerializer):
 
 class CartSerializer(serializers.ModelSerializer):
     cart_details = serializers.SerializerMethodField('get_cart_details')
-    # total_amount = serializers.SerializerMethodField('get_total_amount')
     total_price = serializers.ReadOnlyField()
-
 
     def get_cart_details(self, cart):
         cart_details = cart.cart_items.filter(active=True)
         serializer = CartItemSerializer(cart_details, many=True)
         return serializer.data
 
-    # def get_total_amount(self, cart):
-    #     cart_details = cart.cartdetail_set.filter(active=True)
-    #     total = sum(detail.amount for detail in cart_details)
-    #
-    #     return total
-
-
 
     class Meta:
         model = Cart
-        # fields = ['id', 'user', 'total', 'store', 'created_date', 'active', 'cart_details']
         fields = ['id', 'user', 'total_price', 'created_date', 'active', 'cart_details']
 
 
 
 class CartItemSerializer(serializers.ModelSerializer):
     food = serializers.SerializerMethodField('get_food')
+    store = serializers.SerializerMethodField('get_store')  # Add this line to include store data
 
     def get_food(self, obj):
         f = obj.food
         return FoodSerializer(f).data
 
+    def get_store(self, obj):  # Add this method to retrieve store data
+        store = obj.food.store
+        return {
+            'id': store.id,
+            'name': store.name,
+            'address_line': store.address_line,
+            'rating': store.rating,
+            'active': store.active
+        }
+
     class Meta:
         model = CartItem
-        fields = ['id', 'cart', 'food', 'quantity', 'created_date', 'updated_date']
+        fields = ['id', 'cart', 'food', 'store', 'quantity', 'created_date', 'updated_date']
+
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -143,6 +148,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     details = serializers.SerializerMethodField()
+    address = serializers.SerializerMethodField()  # Trường tùy chỉnh để lấy địa chỉ giao hàng
 
     def get_details(self, order):
         # Lấy danh sách chi tiết đơn hàng
@@ -160,20 +166,21 @@ class OrderSerializer(serializers.ModelSerializer):
     def get_user_name(self, order):
         # Lấy tên đầy đủ của người dùng, nếu không có thì lấy username
         name = order.user.first_name + ' ' + order.user.last_name
-        if name == ' ':
+        if name.strip() == '':
             return order.user.username
         return name
 
-    address = serializers.SerializerMethodField()  # Trường tùy chỉnh để lấy địa chỉ giao hàng
-
     def get_address(self, order):
-        # Lấy địa chỉ giao hàng từ order
-        return order.address_ship.address_ship
+        # Lấy địa chỉ giao hàng từ order, nếu có
+        if order.address_ship:
+            return order.address_ship.address_ship
+        return 'No address available'
 
     class Meta:
         model = Order  # Gắn serializer với model Order
         fields = ['id', 'address', 'user', 'user_name', 'store', 'order_status',
                   'payment_status', 'total', 'delivery_fee', 'food_price', 'created_date', 'details']
+
 
 
 class OrderDetailSerializer(serializers.ModelSerializer):
@@ -221,11 +228,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ['id', 'review', 'rating', 'name', 'food']
 
-
-class NotificationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Notification
-        fields = ['id', 'message', 'user', 'created_date']
 
 class YearlyRevenueSerializer(serializers.Serializer):
     year = serializers.IntegerField()
