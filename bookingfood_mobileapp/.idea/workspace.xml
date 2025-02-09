@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="511d8316-6727-4fbd-942f-ad776e3ffcf0" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/components/Home/FoodCard.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/Home/FoodDetail.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/Home/Order.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/Home/StoreDetail.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/Home/StoreMenu.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/Home/Styles.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/Seller/ManageFood.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/User/EditUser.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/User/EditUserStyles.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/User/ManageAddress.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/User/ManageAddressStyles.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/User/StoreOrder.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/User/UploadAvatarStyles.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BookingFood/.idea/BookingFood.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../BookingFood/.idea/BookingFood.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BookingFood/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../BookingFood/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BookingFood/BookingFood/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BookingFood/BookingFood/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BookingFood/BookingFoodApp/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BookingFood/BookingFoodApp/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BookingFood/BookingFoodApp/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BookingFood/BookingFoodApp/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BookingFood/BookingFoodApp/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BookingFood/BookingFoodApp/serializers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BookingFood/BookingFoodApp/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BookingFood/BookingFoodApp/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BookingFood/BookingFoodApp/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BookingFood/BookingFoodApp/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BookingFood/requirements.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/App.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/DefaultApp/Default.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/DefaultApp/Default.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/AddProduct.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/AddProductStyles.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/Bill.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/BillStyles.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/ChatScreen.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/ChatScreenStyles.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/CreateStore.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/CreateStoreStyles.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/Home.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/Home/Home.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/HomeStyles.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/Home/HomeStyles.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/ProductComparison .js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/ProductComparisonStyles.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/ProductDetailStyles.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/Home/FoodDetailStyles.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/ProductDetails.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/SalesReport.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/Search.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/Home/Search.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/SearchStyles.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/Home/SearchStyles.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/ShoppingCart.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/Home/ShoppingCart.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Home/ShoppingCartStyles.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/Home/ShoppingCartStyles.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/User/AuthStyle.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/User/Login.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/User/Login.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/User/LoginStyles.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/User/LoginStyles.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/User/ProductSetting.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/User/ProductSettingStyles.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/User/Register.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/User/Register.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/User/RestaurantRegister.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/User/RestaurantRegister.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/User/SalesStatisticStyles.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/User/Admin_koco_SalesStatisticStyles.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/User/SalesStatistics.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/User/Admin_koco_SalesStatistics.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/User/Statistics.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/User/Statistics.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/User/UserProductStyles.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/User/UserProducts.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/User/UserProfile.js" beforeDir="false" afterPath="$PROJECT_DIR$/components/User/UserProfile.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/APIs.js" beforeDir="false" afterPath="$PROJECT_DIR$/configs/APIs.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/UserContexts.js" beforeDir="false" afterPath="$PROJECT_DIR$/configs/UserContexts.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/UserReducers.js" beforeDir="false" afterPath="$PROJECT_DIR$/configs/UserReducers.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/styles/Styles.js" beforeDir="false" afterPath="$PROJECT_DIR$/styles/Styles.js" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
+  <component name="ProjectId" id="2s9savizYGDB5aIaYTM3LVwGRn4" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Node.js.RestaurantItem.js.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/Booking_Food_Application/bookingfood_mobileapp/components/User&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;MTThemeSelectorConfigurable&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;E:\\WebStorm 2024.3.2.1\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="QodanaReportsService">
+    <option name="descriptions">
+      <ReportDescription localRun="true" path="C:\Users\atuan\AppData\Local\Temp\qodana_output\qodana.sarif.json" reportGuid="af5d4459-c5d7-4f9a-8daa-d4b5417deb71" reportId="bookingfood_mobileapp/qodana/2025-01-31" />
+    </option>
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\Booking_Food_Application\bookingfood_mobileapp\components\User" />
+      <recent name="E:\Booking_Food_Application\bookingfood_mobileapp\components\Home" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\Booking_Food_Application\bookingfood_mobileapp\components\User" />
+      <recent name="E:\Booking_Food_Application\bookingfood_mobileapp\components" />
+      <recent name="E:\Booking_Food_Application\bookingfood_mobileapp\styles" />
+      <recent name="E:\Booking_Food_Application\bookingfood_mobileapp\src\components" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="RestaurantItem.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/src/components/RestaurantItem.js" working-dir="$PROJECT_DIR$/src/components">
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Node.js.RestaurantItem.js" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-822845ee3bb5-JavaScript-WS-243.23654.157" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="511d8316-6727-4fbd-942f-ad776e3ffcf0" name="Changes" comment="" />
+      <created>1737879192157</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1737879192157</updated>
+      <workItem from="1737996934115" duration="667000" />
+      <workItem from="1737997621890" duration="276000" />
+      <workItem from="1737997908596" duration="1992000" />
+      <workItem from="1738058407985" duration="3788000" />
+      <workItem from="1738135515068" duration="7016000" />
+      <workItem from="1738218735546" duration="7907000" />
+      <workItem from="1738228316543" duration="38048000" />
+      <workItem from="1738700112192" duration="40948000" />
+      <workItem from="1738808307348" duration="10946000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/components/RestaurantCard.js</url>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/components/User/StoreOrder.js</url>
+          <line>132</line>
+          <option name="timeStamp" value="10" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/components/Home/SearchStyles.js</url>
+          <line>26</line>
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/components/Seller/AddFood.js</url>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="15" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
